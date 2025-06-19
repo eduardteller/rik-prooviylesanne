@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class EventController {
+public class YritusedController {
 
     @Setter
     @Getter
@@ -17,7 +17,7 @@ public class EventController {
 
     }
 
-    @PostMapping("/print-name")
+    @PostMapping("/add-yritus")
     public ResponseEntity<Void> printName(@RequestBody EventReq request) {
         System.out.println(request.getName());
         return ResponseEntity.ok().build();

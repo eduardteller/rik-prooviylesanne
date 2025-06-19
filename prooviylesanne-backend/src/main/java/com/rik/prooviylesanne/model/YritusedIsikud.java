@@ -20,10 +20,10 @@ public class YritusedIsikud {
     private Yritused yritus;
 
     @ManyToOne(optional = true)
-    @JoinColumn(name = "j_isik", referencedColumnName = "id")
-    private JuriidilisedIsikud jIsik;
+    @JoinColumn(name = "juriidiline_isik_id", referencedColumnName = "id")
+    private JuriidilisedIsikud juriidilineIsikId;
 
     @ManyToOne(optional = true)
-    @JoinColumn(name = "f_isik", referencedColumnName = "id")
-    private FyysilisedIsikud fIsik;
+    @JoinColumn(name = "fyysiline_isik_id", referencedColumnName = "id")
+    private FyysilisedIsikud fyysilineIsikId;
 }
