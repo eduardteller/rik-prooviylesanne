@@ -67,4 +67,36 @@ public class IsikudService {
 
         return savedIsik;
     }
+
+    @Transactional
+    public boolean deleteFyysilineIsik(Long id) {
+        Optional<FyysilisedIsikud> isikOpt = fyysilisedIsikudRepository.findById(id);
+
+        if (isikOpt.isPresent()) {
+            FyysilisedIsikud isik = isikOpt.get();
+
+            yritusedIsikudRepository.deleteByFyysilineIsikId(isik);
+
+            fyysilisedIsikudRepository.delete(isik);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Transactional
+    public boolean deleteJuriidilineIsik(Long id) {
+        Optional<JuriidilisedIsikud> isikOpt = juriidilisedIsikudRepository.findById(id);
+
+        if (isikOpt.isPresent()) {
+            JuriidilisedIsikud isik = isikOpt.get();
+
+            yritusedIsikudRepository.deleteByJuriidilineIsikId(isik);
+
+            juriidilisedIsikudRepository.delete(isik);
+            return true;
+        }
+
+        return false;
+    }
 }

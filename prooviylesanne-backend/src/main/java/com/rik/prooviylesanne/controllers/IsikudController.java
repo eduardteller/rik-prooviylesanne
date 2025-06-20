@@ -88,4 +88,36 @@ public class IsikudController {
                     .body("Failed to add legal entity: " + e.getMessage());
         }
     }
+
+    @GetMapping("/delete-fyysiline-isik")
+    public ResponseEntity<?> deleteFyysilineIsik(@RequestParam Long id) {
+        try {
+            boolean deleted = isikudService.deleteFyysilineIsik(id);
+            if (deleted) {
+                return ResponseEntity.ok("Physical person with ID " + id + " has been successfully deleted");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Physical person with ID " + id + " not found");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete physical person: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/delete-juriidiline-isik")
+    public ResponseEntity<?> deleteJuriidilineIsik(@RequestParam Long id) {
+        try {
+            boolean deleted = isikudService.deleteJuriidilineIsik(id);
+            if (deleted) {
+                return ResponseEntity.ok("Legal entity with ID " + id + " has been successfully deleted");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Legal entity with ID " + id + " not found");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete legal entity: " + e.getMessage());
+        }
+    }
 }
