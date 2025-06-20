@@ -1,0 +1,6 @@
+### GET request to delete an Yritus by ID
+GET http://localhost:8080/delete-yritus/1
+
+### GET request to delete a non-existent Yritus
+GET http://localhost:8080/delete-yritus/999
+

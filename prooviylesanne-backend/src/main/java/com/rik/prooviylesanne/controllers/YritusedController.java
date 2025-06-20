@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,6 +48,23 @@ public class YritusedController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to add event: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/delete-yritus/{id}")
+    public ResponseEntity<?> deleteYritus(@PathVariable Long id) {
+        try {
+            boolean deleted = yritusedService.deleteYritusWithRelatedRecords(id);
+
+            if (deleted) {
+                return ResponseEntity.ok("Event with ID " + id + " and all related records have been deleted successfully.");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Event with ID " + id + " not found.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
         }
     }
 }
