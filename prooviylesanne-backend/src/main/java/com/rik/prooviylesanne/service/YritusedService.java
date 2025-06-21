@@ -43,7 +43,25 @@ public class YritusedService {
 
         for (Yritused yritus : yritused) {
             List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
-            Integer isikudCount = isikud.size();
+
+            int fyysilisedCount = 0;
+            int juriidilisedOsavotjateCount = 0;
+
+            for (YritusedIsikud isik : isikud) {
+                if (isik.getFyysilineIsikId() != null) {
+                    fyysilisedCount++;
+                } else if (isik.getJuriidilineIsikId() != null) {
+                    String osavotjateArvStr = isik.getJuriidilineIsikId().getOsavotjateArv();
+                    try {
+                        int osavotjateArv = Integer.parseInt(osavotjateArvStr);
+                        juriidilisedOsavotjateCount += osavotjateArv;
+                    } catch (NumberFormatException e) {
+                        // tyhi
+                    }
+                }
+            }
+
+            Integer totalParticipants = fyysilisedCount + juriidilisedOsavotjateCount;
 
             YritusedDto dto = new YritusedDto(
                     yritus.getId(),
@@ -51,7 +69,7 @@ public class YritusedService {
                     yritus.getAeg(),
                     yritus.getKoht(),
                     yritus.getLisainfo(),
-                    isikudCount
+                    totalParticipants
             );
 
             yritusedDtos.add(dto);
