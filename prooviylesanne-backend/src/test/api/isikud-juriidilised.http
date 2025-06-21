@@ -1,0 +1,15 @@
+### Add a legal entity to an event
+POST http://localhost:8080/api/isikud/add-juriidiline-isik
+Content-Type: application/json
+
+{
+  "nimi": "Example Company Ltd",
+  "registrikood": "12345678",
+  "osavotjateArv": "5",
+  "maksmiseViis": "Bank Transfer",
+  "lisainfo": "Additional information about the legal entity",
+  "yritusId": 2
+}
+
+### Delete a legal entity
+GET http://localhost:8080/api/isikud/delete-juriidiline-isik?id=1

@@ -2,10 +2,12 @@ package com.rik.prooviylesanne.service;
 
 import com.rik.prooviylesanne.model.FyysilisedIsikud;
 import com.rik.prooviylesanne.model.JuriidilisedIsikud;
+import com.rik.prooviylesanne.model.MaksmiseViisid;
 import com.rik.prooviylesanne.model.Yritused;
 import com.rik.prooviylesanne.model.YritusedIsikud;
 import com.rik.prooviylesanne.repository.FyysilisedIsikudRepository;
 import com.rik.prooviylesanne.repository.JuriidilisedIsikudRepository;
+import com.rik.prooviylesanne.repository.MaksmiseViisidRepository;
 import com.rik.prooviylesanne.repository.YritusedIsikudRepository;
 import com.rik.prooviylesanne.repository.YritusedRepository;
 import jakarta.transaction.Transactional;
@@ -21,25 +23,33 @@ public class IsikudService {
     private final JuriidilisedIsikudRepository juriidilisedIsikudRepository;
     private final YritusedRepository yritusedRepository;
     private final YritusedIsikudRepository yritusedIsikudRepository;
+    private final MaksmiseViisidRepository maksmiseViisidRepository;
 
     @Autowired
     public IsikudService(
             FyysilisedIsikudRepository fyysilisedIsikudRepository,
             JuriidilisedIsikudRepository juriidilisedIsikudRepository,
             YritusedRepository yritusedRepository,
-            YritusedIsikudRepository yritusedIsikudRepository) {
+            YritusedIsikudRepository yritusedIsikudRepository,
+            MaksmiseViisidRepository maksmiseViisidRepository) {
         this.fyysilisedIsikudRepository = fyysilisedIsikudRepository;
         this.juriidilisedIsikudRepository = juriidilisedIsikudRepository;
         this.yritusedRepository = yritusedRepository;
         this.yritusedIsikudRepository = yritusedIsikudRepository;
+        this.maksmiseViisidRepository = maksmiseViisidRepository;
     }
 
     @Transactional
-    public FyysilisedIsikud addFyysilineIsikToYritus(FyysilisedIsikud isik, Long yritusId) {
+    public FyysilisedIsikud addFyysilineIsikToYritus(FyysilisedIsikud isik, Long yritusId, String maksmiseViisString) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
         }
+
+        MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
+                .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
+
+        isik.setMaksmiseViis(maksmiseViis);
 
         FyysilisedIsikud savedIsik = fyysilisedIsikudRepository.save(isik);
 
@@ -52,11 +62,16 @@ public class IsikudService {
     }
 
     @Transactional
-    public JuriidilisedIsikud addJuriidilineIsikToYritus(JuriidilisedIsikud isik, Long yritusId) {
+    public JuriidilisedIsikud addJuriidilineIsikToYritus(JuriidilisedIsikud isik, Long yritusId, String maksmiseViisString) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
         }
+
+        MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
+                .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
+
+        isik.setMaksmiseViis(maksmiseViis);
 
         JuriidilisedIsikud savedIsik = juriidilisedIsikudRepository.save(isik);
 

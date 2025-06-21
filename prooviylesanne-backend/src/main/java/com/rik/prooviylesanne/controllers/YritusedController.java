@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @RestController
 public class YritusedController {
@@ -51,8 +53,19 @@ public class YritusedController {
         }
     }
 
-    @GetMapping("/delete-yritus/{id}")
-    public ResponseEntity<?> deleteYritus(@PathVariable Long id) {
+    @GetMapping("/get-yritused")
+    public ResponseEntity<?> getAllYritused() {
+        try {
+            List<Yritused> yritused = yritusedService.getAllYritused();
+            return ResponseEntity.ok(yritused);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve events: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/delete-yritus")
+    public ResponseEntity<?> deleteYritus(@RequestParam Long id) {
         try {
             boolean deleted = yritusedService.deleteYritusWithRelatedRecords(id);
 

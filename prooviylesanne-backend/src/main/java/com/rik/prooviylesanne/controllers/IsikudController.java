@@ -52,14 +52,15 @@ public class IsikudController {
             isik.setEesnimi(request.getEesnimi());
             isik.setPerekonnanimi(request.getPerekonnanimi());
             isik.setIsikukood(request.getIsikukood());
-
-            MaksmiseViisid maksmiseViis = new MaksmiseViisid();
-            maksmiseViis.setMaksmiseViis(request.getMaksmiseViis());
-            isik.setMaksmiseViis(maksmiseViis);
-
             isik.setLisainfo(request.getLisainfo());
 
-            FyysilisedIsikud savedIsik = isikudService.addFyysilineIsikToYritus(isik, request.getYritusId());
+            // Let the service handle finding the payment method
+            FyysilisedIsikud savedIsik = isikudService.addFyysilineIsikToYritus(
+                    isik,
+                    request.getYritusId(),
+                    request.getMaksmiseViis()
+            );
+
             return ResponseEntity.ok(savedIsik);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -74,14 +75,15 @@ public class IsikudController {
             isik.setNimi(request.getNimi());
             isik.setRegistrikood(request.getRegistrikood());
             isik.setOsavotjateArv(request.getOsavotjateArv());
-
-            MaksmiseViisid maksmiseViis = new MaksmiseViisid();
-            maksmiseViis.setMaksmiseViis(request.getMaksmiseViis());
-            isik.setMaksmiseViis(maksmiseViis);
-
             isik.setLisainfo(request.getLisainfo());
 
-            JuriidilisedIsikud savedIsik = isikudService.addJuriidilineIsikToYritus(isik, request.getYritusId());
+            // Let the service handle finding the payment method
+            JuriidilisedIsikud savedIsik = isikudService.addJuriidilineIsikToYritus(
+                    isik,
+                    request.getYritusId(),
+                    request.getMaksmiseViis()
+            );
+
             return ResponseEntity.ok(savedIsik);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

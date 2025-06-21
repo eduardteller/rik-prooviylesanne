@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,10 @@ public class YritusedService {
 
     public Optional<Yritused> getYritusById(Long id) {
         return yritusedRepository.findById(id);
+    }
+
+    public List<Yritused> getAllYritused() {
+        return yritusedRepository.findAll();
     }
 
     @Transactional
