@@ -145,4 +145,50 @@ public class IsikudService {
 
         return result;
     }
+
+    @Transactional
+    public FyysilisedIsikud updateFyysilineIsik(Long id, FyysilisedIsikud updatedIsik, String maksmiseViisString) {
+        Optional<FyysilisedIsikud> isikOpt = fyysilisedIsikudRepository.findById(id);
+        if (!isikOpt.isPresent()) {
+            throw new RuntimeException("Physical person with ID " + id + " not found");
+        }
+
+        FyysilisedIsikud existingIsik = isikOpt.get();
+
+        existingIsik.setEesnimi(updatedIsik.getEesnimi());
+        existingIsik.setPerekonnanimi(updatedIsik.getPerekonnanimi());
+        existingIsik.setIsikukood(updatedIsik.getIsikukood());
+        existingIsik.setLisainfo(updatedIsik.getLisainfo());
+
+        if (maksmiseViisString != null && !maksmiseViisString.isEmpty()) {
+            MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
+                    .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
+            existingIsik.setMaksmiseViis(maksmiseViis);
+        }
+
+        return fyysilisedIsikudRepository.save(existingIsik);
+    }
+
+    @Transactional
+    public JuriidilisedIsikud updateJuriidilineIsik(Long id, JuriidilisedIsikud updatedIsik, String maksmiseViisString) {
+        Optional<JuriidilisedIsikud> isikOpt = juriidilisedIsikudRepository.findById(id);
+        if (!isikOpt.isPresent()) {
+            throw new RuntimeException("Legal entity with ID " + id + " not found");
+        }
+
+        JuriidilisedIsikud existingIsik = isikOpt.get();
+
+        existingIsik.setNimi(updatedIsik.getNimi());
+        existingIsik.setRegistrikood(updatedIsik.getRegistrikood());
+        existingIsik.setOsavotjateArv(updatedIsik.getOsavotjateArv());
+        existingIsik.setLisainfo(updatedIsik.getLisainfo());
+
+        if (maksmiseViisString != null && !maksmiseViisString.isEmpty()) {
+            MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
+                    .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
+            existingIsik.setMaksmiseViis(maksmiseViis);
+        }
+
+        return juriidilisedIsikudRepository.save(existingIsik);
+    }
 }

@@ -42,7 +42,6 @@ public class YritusedService {
         List<YritusedDto> yritusedDtos = new ArrayList<>();
 
         for (Yritused yritus : yritused) {
-            // Count the number of associated people (both physical and legal entities)
             List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
             Integer isikudCount = isikud.size();
 

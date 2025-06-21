@@ -47,6 +47,28 @@ public class IsikudController {
         private Long yritusId;
     }
 
+    @Setter
+    @Getter
+    public static class FyysilineIsikUpdateRequest {
+        private Long id;
+        private String eesnimi;
+        private String perekonnanimi;
+        private String isikukood;
+        private String maksmiseViis;
+        private String lisainfo;
+    }
+
+    @Setter
+    @Getter
+    public static class JuriidilineIsikUpdateRequest {
+        private Long id;
+        private String nimi;
+        private String registrikood;
+        private String osavotjateArv;
+        private String maksmiseViis;
+        private String lisainfo;
+    }
+
     @PostMapping("/add-fyysiline-isik")
     public ResponseEntity<?> addFyysilineIsik(@RequestBody FyysilineIsikRequest request) {
         try {
@@ -133,6 +155,58 @@ public class IsikudController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to retrieve people for event: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/update-fyysiline-isik")
+    public ResponseEntity<?> updateFyysilineIsik(@RequestBody FyysilineIsikUpdateRequest request) {
+        try {
+            if (request.getId() == null) {
+                return ResponseEntity.badRequest().body("ID is required for updating a physical person");
+            }
+
+            FyysilisedIsikud isikToUpdate = new FyysilisedIsikud();
+            isikToUpdate.setEesnimi(request.getEesnimi());
+            isikToUpdate.setPerekonnanimi(request.getPerekonnanimi());
+            isikToUpdate.setIsikukood(request.getIsikukood());
+            isikToUpdate.setLisainfo(request.getLisainfo());
+
+            FyysilisedIsikud updatedIsik = isikudService.updateFyysilineIsik(
+                    request.getId(),
+                    isikToUpdate,
+                    request.getMaksmiseViis()
+            );
+
+            return ResponseEntity.ok(updatedIsik);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update physical person: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/update-juriidiline-isik")
+    public ResponseEntity<?> updateJuriidilineIsik(@RequestBody JuriidilineIsikUpdateRequest request) {
+        try {
+            if (request.getId() == null) {
+                return ResponseEntity.badRequest().body("ID is required for updating a legal entity");
+            }
+
+            JuriidilisedIsikud isikToUpdate = new JuriidilisedIsikud();
+            isikToUpdate.setNimi(request.getNimi());
+            isikToUpdate.setRegistrikood(request.getRegistrikood());
+            isikToUpdate.setOsavotjateArv(request.getOsavotjateArv());
+            isikToUpdate.setLisainfo(request.getLisainfo());
+
+            JuriidilisedIsikud updatedIsik = isikudService.updateJuriidilineIsik(
+                    request.getId(),
+                    isikToUpdate,
+                    request.getMaksmiseViis()
+            );
+
+            return ResponseEntity.ok(updatedIsik);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update legal entity: " + e.getMessage());
         }
     }
 }
