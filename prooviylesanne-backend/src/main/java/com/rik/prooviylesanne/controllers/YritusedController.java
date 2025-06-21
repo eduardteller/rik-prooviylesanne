@@ -1,5 +1,6 @@
 package com.rik.prooviylesanne.controllers;
 
+import com.rik.prooviylesanne.dto.YritusedDto;
 import com.rik.prooviylesanne.model.Yritused;
 import com.rik.prooviylesanne.service.YritusedService;
 import lombok.Getter;
@@ -54,13 +55,13 @@ public class YritusedController {
     }
 
     @GetMapping("/get-yritused")
-    public ResponseEntity<?> getAllYritused() {
+    public ResponseEntity<?> getAllYritusedWithCount() {
         try {
-            List<Yritused> yritused = yritusedService.getAllYritused();
-            return ResponseEntity.ok(yritused);
+            List<YritusedDto> yritusedDtos = yritusedService.getAllYritusedAsDto();
+            return ResponseEntity.ok(yritusedDtos);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve events: " + e.getMessage());
+                    .body("Failed to retrieve events with counts: " + e.getMessage());
         }
     }
 

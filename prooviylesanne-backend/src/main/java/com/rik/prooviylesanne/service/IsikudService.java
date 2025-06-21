@@ -14,6 +14,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -113,5 +117,32 @@ public class IsikudService {
         }
 
         return false;
+    }
+
+    public Map<String, Object> getAllIsikudForYritus(Long yritusId) {
+        Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
+        if (!yritusOpt.isPresent()) {
+            throw new RuntimeException("Event with ID " + yritusId + " not found");
+        }
+
+        Yritused yritus = yritusOpt.get();
+        List<YritusedIsikud> yritusedIsikud = yritusedIsikudRepository.findByYritus(yritus);
+
+        List<FyysilisedIsikud> fyysilisedIsikud = new ArrayList<>();
+        List<JuriidilisedIsikud> juriidilisedIsikud = new ArrayList<>();
+
+        for (YritusedIsikud yritusIsik : yritusedIsikud) {
+            if (yritusIsik.getFyysilineIsikId() != null) {
+                fyysilisedIsikud.add(yritusIsik.getFyysilineIsikId());
+            } else if (yritusIsik.getJuriidilineIsikId() != null) {
+                juriidilisedIsikud.add(yritusIsik.getJuriidilineIsikId());
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("fyysilisedIsikud", fyysilisedIsikud);
+        result.put("juriidilisedIsikud", juriidilisedIsikud);
+
+        return result;
     }
 }

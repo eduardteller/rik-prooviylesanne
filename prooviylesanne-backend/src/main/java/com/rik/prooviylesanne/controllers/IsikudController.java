@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/isikud")
 @CrossOrigin(origins = "*")
@@ -120,6 +122,17 @@ public class IsikudController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to delete legal entity: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-isikud")
+    public ResponseEntity<?> getIsikudByYritusId(@RequestParam Long yritusId) {
+        try {
+            Map<String, Object> isikud = isikudService.getAllIsikudForYritus(yritusId);
+            return ResponseEntity.ok(isikud);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve people for event: " + e.getMessage());
         }
     }
 }

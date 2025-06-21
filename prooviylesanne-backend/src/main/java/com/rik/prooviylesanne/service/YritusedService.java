@@ -1,12 +1,15 @@
 package com.rik.prooviylesanne.service;
 
+import com.rik.prooviylesanne.dto.YritusedDto;
 import com.rik.prooviylesanne.model.Yritused;
+import com.rik.prooviylesanne.model.YritusedIsikud;
 import com.rik.prooviylesanne.repository.YritusedIsikudRepository;
 import com.rik.prooviylesanne.repository.YritusedRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +35,30 @@ public class YritusedService {
 
     public List<Yritused> getAllYritused() {
         return yritusedRepository.findAll();
+    }
+
+    public List<YritusedDto> getAllYritusedAsDto() {
+        List<Yritused> yritused = yritusedRepository.findAll();
+        List<YritusedDto> yritusedDtos = new ArrayList<>();
+
+        for (Yritused yritus : yritused) {
+            // Count the number of associated people (both physical and legal entities)
+            List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
+            Integer isikudCount = isikud.size();
+
+            YritusedDto dto = new YritusedDto(
+                    yritus.getId(),
+                    yritus.getNimi(),
+                    yritus.getAeg(),
+                    yritus.getKoht(),
+                    yritus.getLisainfo(),
+                    isikudCount
+            );
+
+            yritusedDtos.add(dto);
+        }
+
+        return yritusedDtos;
     }
 
     @Transactional
