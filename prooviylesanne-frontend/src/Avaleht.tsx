@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import { categorizeEvents, useEvents } from './api/events';
 import { EventItem } from './components/EventItem';
 import Footer from './components/Footer';
@@ -5,6 +6,7 @@ import Header from './components/Header';
 
 function Avaleht() {
 	const { data: events, isLoading, error } = useEvents();
+	const navigate = useNavigate();
 
 	const { upcomingEvents, pastEvents } = events
 		? categorizeEvents(events)
@@ -64,7 +66,10 @@ function Avaleht() {
 									</div>
 								</div>
 								<div className="w-full px-8 pb-4 pt-2">
-									<button className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer">
+									<button
+										onClick={() => navigate('/lisa-yritus')}
+										className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer"
+									>
 										LISA ÜRITUS
 									</button>
 								</div>

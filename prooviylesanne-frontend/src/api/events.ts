@@ -9,6 +9,13 @@ export interface Event {
 	isikudCount: number;
 }
 
+export interface CreateEventRequest {
+	nimi: string;
+	aeg: string;
+	koht: string;
+	lisainfo: string;
+}
+
 const fetchEvents = async (): Promise<Event[]> => {
 	const response = await fetch('http://localhost:8080/get-yritused');
 
@@ -29,6 +36,20 @@ const deleteEvent = async (id: number): Promise<void> => {
 	}
 };
 
+const createEvent = async (eventData: CreateEventRequest): Promise<void> => {
+	const response = await fetch('http://localhost:8080/add-yritus', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(eventData),
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to create event');
+	}
+};
+
 export const useEvents = () => {
 	return useQuery({
 		queryKey: ['events'],
@@ -45,6 +66,18 @@ export const useDeleteEvent = () => {
 		mutationFn: deleteEvent,
 		onSuccess: () => {
 			// Invalidate and refetch events after successful deletion
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+		},
+	});
+};
+
+export const useCreateEvent = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: createEvent,
+		onSuccess: () => {
+			// Invalidate and refetch events after successful creation
 			queryClient.invalidateQueries({ queryKey: ['events'] });
 		},
 	});
