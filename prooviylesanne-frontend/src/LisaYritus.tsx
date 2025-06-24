@@ -8,7 +8,14 @@ import Header from './components/Header';
 
 const eventSchema = z.object({
 	nimi: z.string().min(1, 'Ürituse nimi on kohustuslik'),
-	aeg: z.string().min(1, 'Toimumisaeg on kohustuslik'),
+	aeg: z
+		.string()
+		.min(1, 'Toimumisaeg on kohustuslik')
+		.refine((value) => {
+			const selectedDate = new Date(value);
+			const now = new Date();
+			return selectedDate > now;
+		}, 'Toimumisaeg peab olema tulevikus'),
 	koht: z.string().min(1, 'Koht on kohustuslik'),
 	lisainfo: z.string().optional(),
 });
@@ -18,6 +25,12 @@ type EventFormData = z.infer<typeof eventSchema>;
 const LisaYritus = () => {
 	const createEventMutation = useCreateEvent();
 	const navigate = useNavigate();
+
+	const now = new Date();
+	const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+		.toISOString()
+		.slice(0, 16);
+
 	const {
 		register,
 		handleSubmit,
@@ -34,15 +47,32 @@ const LisaYritus = () => {
 	});
 	const onSubmit: SubmitHandler<EventFormData> = async (data) => {
 		try {
-			console.log('Submitting event data:', data);
+			const date = new Date(data.aeg);
+			const timezoneOffset = date.getTimezoneOffset();
+			const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60);
+			const offsetMinutes = Math.abs(timezoneOffset) % 60;
+			const offsetSign = timezoneOffset <= 0 ? '+' : '-';
+			const offsetString = `${offsetSign}${offsetHours
+				.toString()
+				.padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`;
+
+			const year = date.getFullYear();
+			const month = (date.getMonth() + 1).toString().padStart(2, '0');
+			const day = date.getDate().toString().padStart(2, '0');
+			const hours = date.getHours().toString().padStart(2, '0');
+			const minutes = date.getMinutes().toString().padStart(2, '0');
+			const seconds = date.getSeconds().toString().padStart(2, '0');
+
+			const dateWithTimezone = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetString}`;
+
+			console.log(dateWithTimezone);
 
 			await createEventMutation.mutateAsync({
 				nimi: data.nimi,
-				aeg: data.aeg,
+				aeg: dateWithTimezone,
 				koht: data.koht,
 				lisainfo: data.lisainfo || '',
 			});
-			// Reset form after successful submission
 			reset();
 			navigate('/');
 		} catch (error) {
@@ -91,11 +121,12 @@ const LisaYritus = () => {
 														{errors.nimi.message}
 													</p>
 												)}
-											</div>
+											</div>{' '}
 											<div>
 												<input
 													{...register('aeg')}
 													type="datetime-local"
+													min={minDateTime}
 													className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
 												/>
 												{errors.aeg && (
