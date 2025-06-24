@@ -1,4 +1,13 @@
+import { categorizeEvents, useEvents } from './api/events';
+import { EventItem } from './components/EventItem';
+
 function App() {
+	const { data: events, isLoading, error } = useEvents();
+
+	const { upcomingEvents, pastEvents } = events
+		? categorizeEvents(events)
+		: { upcomingEvents: [], pastEvents: [] };
+
 	return (
 		<>
 			<main className="bg-[#eef2f5] min-h-screen">
@@ -19,9 +28,9 @@ function App() {
 						<div className="w-full h-full bg-white flex">
 							<div className="basis-1/2 flex flex-col items-center justify-center bg-bermuda-500 text-white text-xl">
 								<p className=" px-8 leading-8">
-									Lorem ipsum dolor sit amet consectetur adipisicing elit.
-									Exercitationem praesentium veritatis odit asperiores laborum
-									officiis repudiandae enim quaerat deserunt facilis?
+									Sed nec elit vestibulum, tincidunt orci et, sagittis ex.
+									Vestibulum rutrum neque suscipit ante mattis maximus. Nulla
+									non sapien viverra, lobortis lorem non, accumsan metus.
 								</p>
 							</div>
 							<div className="basis-1/2 h-full bg-yellow-300 transform ">
@@ -42,34 +51,24 @@ function App() {
 								<div className=" text-zinc-600 flex-1 w-full overflow-y-auto">
 									{/* main container with fetched data */}
 									<div className="flex flex-col gap-2 pt-4 pb-2 px-8">
-										<div id="1" className="w-full flex justify-between">
-											<p>1. Aenean Commodo</p>
-											<div className="flex gap-12">
-												<p>14.02.16</p>
-												<div className="flex gap-2 items-center">
-													<button className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer">
-														OSAVÕTJAD
-													</button>
-													<button className="font-bold opacity-60 uppercase duration-100 hover:opacity-80 cursor-pointer">
-														<img src="/remove.svg" className="w-3 h-3" alt="" />
-													</button>
-												</div>
+										{isLoading ? (
+											<div className="text-center py-4">Laadimine...</div>
+										) : error ? (
+											<div className="text-center py-4 text-red-500">
+												Viga: {error.message}
 											</div>
-										</div>
-										<div id="2" className="w-full flex justify-between">
-											<p>2. Aenean Commodo</p>
-											<div className="flex gap-12">
-												<p>14.02.16</p>
-												<div className="flex gap-2 items-center">
-													<button className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer">
-														OSAVÕTJAD
-													</button>
-													<button className="font-bold opacity-60 uppercase duration-100 hover:opacity-80 cursor-pointer">
-														<img src="/remove.svg" className="w-3 h-3" alt="" />
-													</button>
-												</div>
-											</div>
-										</div>
+										) : upcomingEvents.length > 0 ? (
+											upcomingEvents.map((event, index) => (
+												<EventItem
+													key={event.id}
+													event={event}
+													index={index}
+													showRemoveButton={true}
+												/>
+											))
+										) : (
+											<div className="text-center py-4">Üritused puuduvad</div>
+										)}
 									</div>
 								</div>
 								<div className="w-full px-8 pb-4 pt-2">
@@ -85,15 +84,24 @@ function App() {
 								<div className=" text-zinc-600 flex-1 w-full overflow-y-auto">
 									{/* main container with fetched data */}
 									<div className="flex flex-col gap-2 pt-4 pb-2 px-8">
-										<div id="2" className="w-full flex justify-between">
-											<p>2. Aenean Commodo</p>
-											<div className="flex gap-12">
-												<p>14.02.16</p>
-												<button className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer">
-													OSAVÕTJAD
-												</button>
+										{isLoading ? (
+											<div className="text-center py-4">Laadimine...</div>
+										) : error ? (
+											<div className="text-center py-4 text-red-500">
+												Viga: {error.message}
 											</div>
-										</div>
+										) : pastEvents.length > 0 ? (
+											pastEvents.map((event, index) => (
+												<EventItem
+													key={event.id}
+													event={event}
+													index={index}
+													showRemoveButton={false}
+												/>
+											))
+										) : (
+											<div className="text-center py-4">Üritused puuduvad</div>
+										)}
 									</div>
 								</div>
 							</div>
