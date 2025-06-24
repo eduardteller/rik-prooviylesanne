@@ -1,1 +1,6 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-bermuda-500: #195aa0;
+	--color-bermuda-600: #0f4c81;
+}
