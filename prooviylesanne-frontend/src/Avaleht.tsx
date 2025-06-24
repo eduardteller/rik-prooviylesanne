@@ -1,7 +1,9 @@
 import { categorizeEvents, useEvents } from './api/events';
 import { EventItem } from './components/EventItem';
+import Footer from './components/Footer';
+import Header from './components/Header';
 
-function App() {
+function Avaleht() {
 	const { data: events, isLoading, error } = useEvents();
 
 	const { upcomingEvents, pastEvents } = events
@@ -11,27 +13,17 @@ function App() {
 	return (
 		<>
 			<main className="bg-[#eef2f5] min-h-screen">
-				<div className="relative mx-auto h-screen w-full max-w-6xl py-8 flex flex-col">
-					<div className="bg-white h-20 flex justify-between">
-						<div className="flex flex-row items-center h-full">
-							<img src="/logo.svg" className="px-6" alt="" />
-							<button className="h-full hover:cursor-pointer px-4 ml-24 text-white bg-bermuda-500 font-bold uppercase text-xs duration-100">
-								Avaleht
-							</button>
-							<button className="h-full px-4 hover:cursor-pointer text-gray-900 hover:text-white hover:bg-[#373737] font-bold uppercase text-xs duration-100">
-								Ürituse lisamine
-							</button>
-						</div>
-						<img src="/symbol.svg" alt="" className="pr-8 py-3" />
-					</div>
+				<div className="relative mx-auto h-screen w-full max-w-5xl py-8 flex flex-col">
+					<Header />
 					<div className="mt-4 w-full">
 						<div className="w-full h-full bg-white flex">
 							<div className="basis-1/2 flex flex-col items-center justify-center bg-bermuda-500 text-white text-xl">
-								<p className=" px-8 leading-8">
-									Sed nec elit vestibulum, tincidunt orci et, sagittis ex.
-									Vestibulum rutrum neque suscipit ante mattis maximus. Nulla
-									non sapien viverra, lobortis lorem non, accumsan metus.
-								</p>
+								<span className=" px-8 leading-8">
+									Sed nec elit vestibulum, <strong>tincidunt orci</strong> et,
+									sagittis ex. Vestibulum rutrum <strong>neque suscipit</strong>{' '}
+									ante mattis maximus. Nulla non sapien{' '}
+									<strong>viverra, lobortis lorem non</strong>, accumsan metus.
+								</span>
 							</div>
 							<div className="basis-1/2 h-full bg-yellow-300 transform ">
 								<img
@@ -107,46 +99,11 @@ function App() {
 							</div>
 						</div>
 					</div>
-					<div className="mt-4 w-full">
-						<div className="w-full h-full bg-[#373737] text-white flex p-12 ">
-							<div className="flex flex-col opacity-75">
-								<h1 className="text-3xl">Curabitur</h1>
-								<p className="mt-4  ">Emauris</p>
-								<p className=" ">Kfringilla</p>
-								<p className=" ">Oin magna sem</p>
-								<p className=" ">Kelementum</p>
-							</div>
-							<div className="flex flex-col opacity-75 ml-32">
-								<h1 className="text-3xl ">Fusce</h1>
-								<p className="mt-4  ">Econsectetur</p>
-								<p className=" ">Ksollicitudin</p>
-								<p className=" ">Omvulputate</p>
-								<p className=" ">Nunc fringilla tellu</p>
-							</div>
-							<div className="flex flex-col ml-32">
-								<h1 className="text-3xl opacity-75">Kontakt</h1>
-								<p className="mt-4  font-semibold opacity-85">
-									Peakontor: Tallinnas
-								</p>
-								<p className=" opacity-75">Väike- Ameerika 1, 11415 Tallinn</p>
-								<p className=" opacity-75">Telefon: 605 4450</p>
-								<p className=" opacity-75">Faks: 605 3186</p>
-							</div>
-							<div className="flex flex-col ml-12">
-								<h1 className="text-3xl opacity-0">Curabitur</h1>
-								<p className="mt-4 font-semibold opacity-85">
-									Harukontor: Võrus
-								</p>
-								<p className=" opacity-75">Oja tn 7 (külastusaadress)</p>
-								<p className=" opacity-75">Telefon: 605 3330</p>
-								<p className=" opacity-75">Faks: 605 3155</p>
-							</div>
-						</div>
-					</div>
+					<Footer />
 				</div>
 			</main>
 		</>
 	);
 }
 
-export default App;
+export default Avaleht;

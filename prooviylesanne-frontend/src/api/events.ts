@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface Event {
 	id: number;
@@ -19,12 +19,34 @@ const fetchEvents = async (): Promise<Event[]> => {
 	return response.json();
 };
 
+const deleteEvent = async (id: number): Promise<void> => {
+	const response = await fetch(`http://localhost:8080/delete-yritus?id=${id}`, {
+		method: 'GET',
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to delete event');
+	}
+};
+
 export const useEvents = () => {
 	return useQuery({
 		queryKey: ['events'],
 		queryFn: fetchEvents,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+export const useDeleteEvent = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteEvent,
+		onSuccess: () => {
+			// Invalidate and refetch events after successful deletion
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+		},
 	});
 };
 
