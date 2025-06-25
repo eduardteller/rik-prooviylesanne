@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 import Avaleht from './Avaleht.tsx';
 import './index.css';
 import LisaYritus from './LisaYritus.tsx';
+import Osavotjad from './Osavotjad.tsx';
 
 const queryClient = new QueryClient();
 
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
 			<Routes>
 				<Route path="/" element={<Avaleht />} />
 				<Route path="/lisa-yritus" element={<LisaYritus />} />
+				<Route path="/osavotjad/:id" element={<Osavotjad />} />
 			</Routes>
 		</BrowserRouter>
 	</QueryClientProvider>
