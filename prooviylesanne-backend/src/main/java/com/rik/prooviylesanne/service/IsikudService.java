@@ -191,4 +191,14 @@ public class IsikudService {
 
         return juriidilisedIsikudRepository.save(existingIsik);
     }
+
+    public FyysilisedIsikud getFyysilineIsikById(Long id) {
+        return fyysilisedIsikudRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Physical person with ID " + id + " not found"));
+    }
+
+    public JuriidilisedIsikud getJuriidilineIsikById(Long id) {
+        return juriidilisedIsikudRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Legal entity with ID " + id + " not found"));
+    }
 }

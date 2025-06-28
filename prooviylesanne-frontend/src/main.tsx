@@ -5,6 +5,7 @@ import Avaleht from './Avaleht.tsx';
 import './index.css';
 import LisaYritus from './LisaYritus.tsx';
 import Osavotjad from './Osavotjad.tsx';
+import OsavotjadDetail from './OsavotjadDetail.tsx';
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
 				<Route path="/" element={<Avaleht />} />
 				<Route path="/lisa-yritus" element={<LisaYritus />} />
 				<Route path="/osavotjad/:id" element={<Osavotjad />} />
+				<Route path="/osavotjad/:type/:id" element={<OsavotjadDetail />} />
 			</Routes>
 		</BrowserRouter>
 	</QueryClientProvider>

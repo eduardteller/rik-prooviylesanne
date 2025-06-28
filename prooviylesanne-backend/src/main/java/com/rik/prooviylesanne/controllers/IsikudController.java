@@ -209,4 +209,26 @@ public class IsikudController {
                     .body("Failed to update legal entity: " + e.getMessage());
         }
     }
+
+    @GetMapping("/get-fyysiline-isik")
+    public ResponseEntity<?> getFyysilineIsikById(@RequestParam Long id) {
+        try {
+            FyysilisedIsikud isik = isikudService.getFyysilineIsikById(id);
+            return ResponseEntity.ok(isik);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve physical person: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-juriidiline-isik")
+    public ResponseEntity<?> getJuriidilineIsikById(@RequestParam Long id) {
+        try {
+            JuriidilisedIsikud isik = isikudService.getJuriidilineIsikById(id);
+            return ResponseEntity.ok(isik);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve legal entity: " + e.getMessage());
+        }
+    }
 }
