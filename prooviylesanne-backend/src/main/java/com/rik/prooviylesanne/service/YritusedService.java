@@ -78,6 +78,47 @@ public class YritusedService {
         return yritusedDtos;
     }
 
+    public Optional<YritusedDto> getYritusDtoById(Long id) {
+        Optional<Yritused> yritusOpt = yritusedRepository.findById(id);
+
+        if (yritusOpt.isPresent()) {
+            Yritused yritus = yritusOpt.get();
+            List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
+
+            int fyysilisedCount = 0;
+            int juriidilisedOsavotjateCount = 0;
+
+            for (YritusedIsikud isik : isikud) {
+                if (isik.getFyysilineIsikId() != null) {
+                    fyysilisedCount++;
+                } else if (isik.getJuriidilineIsikId() != null) {
+                    String osavotjateArvStr = isik.getJuriidilineIsikId().getOsavotjateArv();
+                    try {
+                        int osavotjateArv = Integer.parseInt(osavotjateArvStr);
+                        juriidilisedOsavotjateCount += osavotjateArv;
+                    } catch (NumberFormatException e) {
+                        // tyhi
+                    }
+                }
+            }
+
+            Integer totalParticipants = fyysilisedCount + juriidilisedOsavotjateCount;
+
+            YritusedDto dto = new YritusedDto(
+                    yritus.getId(),
+                    yritus.getNimi(),
+                    yritus.getAeg(),
+                    yritus.getKoht(),
+                    yritus.getLisainfo(),
+                    totalParticipants
+            );
+
+            return Optional.of(dto);
+        }
+
+        return Optional.empty();
+    }
+
     @Transactional
     public boolean deleteYritusWithRelatedRecords(Long id) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(id);

@@ -50,6 +50,16 @@ const createEvent = async (eventData: CreateEventRequest): Promise<void> => {
 	}
 };
 
+const fetchEvent = async (id: string): Promise<Event> => {
+	const response = await fetch(`http://localhost:8080/get-yritused?id=${id}`);
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch event');
+	}
+
+	return response.json();
+};
+
 export const useEvents = () => {
 	return useQuery({
 		queryKey: ['events'],
@@ -80,6 +90,16 @@ export const useCreateEvent = () => {
 			// Invalidate and refetch events after successful creation
 			queryClient.invalidateQueries({ queryKey: ['events'] });
 		},
+	});
+};
+
+export const useEvent = (id: string) => {
+	return useQuery({
+		queryKey: ['event', id],
+		queryFn: () => fetchEvent(id),
+		enabled: !!id, // Only run query if id is provided
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
 	});
 };
 

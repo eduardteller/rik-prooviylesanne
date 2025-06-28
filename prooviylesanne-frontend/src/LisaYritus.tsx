@@ -90,8 +90,8 @@ const LisaYritus = () => {
 				<div className="relative mx-auto h-screen w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 					<div className="mt-4 flex flex-col  w-full">
-						<div className="flex h-18 w-full">
-							<div className="p-4 px-6 bg-bermuda-500 text-3xl font-light text-white">
+						<div className="flex h-18 w-full overflow-hidden">
+							<div className="pl-8 pr-8 py-4 bg-bermuda-500 text-3xl font-light text-white">
 								<h2>Ürituse lisamine</h2>
 							</div>
 							<img src="/libled.jpg" className="object-cover flex-1" alt="" />

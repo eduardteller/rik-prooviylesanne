@@ -1,28 +1,98 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useParams } from 'react-router';
+import { formatDate, useEvent } from './api/events';
+import { useAddEraisik, useAddEttevote } from './api/participants';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import {
+	eraisikSchema,
+	ettevoteSchema,
+	type EraisikFormData,
+	type EttevoteFormData,
+} from './schemas/participantSchemas';
 
 const Osavotjad = () => {
-	// const { id } = useParams<{ id: string }>();
+	const { id } = useParams<{ id: string }>();
+	const [participantType, setParticipantType] = useState<
+		'eraisik' | 'ettevote'
+	>('eraisik');
+
+	const {
+		data: event,
+		isLoading: eventLoading,
+		error: eventError,
+	} = useEvent(id || '');
+
+	const addEraisikMutation = useAddEraisik();
+	const addEttevoteMutation = useAddEttevote();
+
+	const eraisikForm = useForm<EraisikFormData>({
+		resolver: zodResolver(eraisikSchema),
+		defaultValues: {
+			eesnimi: '',
+			perekonnanimi: '',
+			isikukood: '',
+			maksmiseViis: '',
+			lisainfo: '',
+		},
+	});
+
+	const ettevoteForm = useForm<EttevoteFormData>({
+		resolver: zodResolver(ettevoteSchema),
+		defaultValues: {
+			nimi: '',
+			registrikood: '',
+			osavotjateArv: '',
+			maksmiseViis: '',
+			lisainfo: '',
+		},
+	});
+
+	const onSubmitEraisik = (data: EraisikFormData) => {
+		const submitData = { ...data, yritusId: id };
+		addEraisikMutation.mutate(submitData, {
+			onSuccess: () => {
+				eraisikForm.reset();
+				alert('Eraisik lisatud edukalt!');
+			},
+			onError: (error) => {
+				console.error('Error adding eraisik:', error);
+				alert('Viga eraisiku lisamisel!');
+			},
+		});
+	};
+
+	const onSubmitEttevote = (data: EttevoteFormData) => {
+		const submitData = { ...data, yritusId: id };
+		addEttevoteMutation.mutate(submitData, {
+			onSuccess: () => {
+				ettevoteForm.reset();
+				alert('Ettevõte lisatud edukalt!');
+			},
+			onError: (error) => {
+				console.error('Error adding ettevote:', error);
+				alert('Viga ettevõte lisamisel!');
+			},
+		});
+	};
+
+	const isSubmitting =
+		addEraisikMutation.isPending || addEttevoteMutation.isPending;
 
 	return (
 		<main className="bg-[#eef2f5] min-h-screen">
 			<div className="relative mx-auto  w-full max-w-5xl py-8 flex flex-col">
 				<Header />
 				<div className="mt-4 flex flex-col  w-full">
-					<div className="flex h-18 w-full">
-						<div className="p-4 px-6 bg-bermuda-500 text-3xl font-light text-white">
-							<h2>Ürituse lisamine</h2>
+					<div className="flex h-18 w-full overflow-hidden">
+						<div className="py-4 pl-8 pr-22 bg-bermuda-500 text-3xl font-light text-white">
+							<h2>Osavõtjad</h2>
 						</div>
 						<img src="/libled.jpg" className="object-cover flex-1" alt="" />
 					</div>{' '}
 					<div className="bg-white px-8 pt-8 pb-20  flex flex-col">
-						{/* {id && (
-							<div className="mb-4 p-4 bg-blue-100 border border-blue-300 rounded">
-								<p className="text-blue-800">
-									Extracted ID from URL: <strong>{id}</strong>
-								</p>
-							</div>
-						)} */}
 						<div>
 							<div className=" flex flex-col gap-8 ml-64">
 								<h2 className="text-bermuda-500 text-2xl">Osavõtjad</h2>
@@ -34,9 +104,31 @@ const Osavotjad = () => {
 										<p>Osavõtjad:</p>
 									</div>
 									<div className="flex gap-4 text-sm flex-col flex-1">
-										<p>TEST</p>
-										<p>TEST</p>
-										<p>TEST</p>
+										{eventLoading ? (
+											<>
+												<p>Laeb...</p>
+												<p>Laeb...</p>
+												<p>Laeb...</p>
+											</>
+										) : eventError ? (
+											<>
+												<p className="text-red-500">Viga ürituse laadimisel</p>
+												<p className="text-red-500">Viga ürituse laadimisel</p>
+												<p className="text-red-500">Viga ürituse laadimisel</p>
+											</>
+										) : event ? (
+											<>
+												<p>{event.nimi}</p>
+												<p>{formatDate(event.aeg)}</p>
+												<p>{event.koht}</p>
+											</>
+										) : (
+											<>
+												<p>-</p>
+												<p>-</p>
+												<p>-</p>
+											</>
+										)}
 										<div className="py-8 w-4/5 flex flex-col gap-2">
 											<div className="flex text-sm justify-between">
 												<p>1. Mihkel Amman</p>
@@ -71,7 +163,13 @@ const Osavotjad = () => {
 										</div>
 									</div>
 								</div>
-								<form>
+								<form
+									onSubmit={
+										participantType === 'eraisik'
+											? eraisikForm.handleSubmit(onSubmitEraisik)
+											: ettevoteForm.handleSubmit(onSubmitEttevote)
+									}
+								>
 									<div className=" flex flex-col  ">
 										<h2 className="text-bermuda-500 text-2xl">
 											Osavõtjate lisamine
@@ -83,6 +181,15 @@ const Osavotjad = () => {
 													name="participantType"
 													value="eraisik"
 													id="eraisik"
+													checked={participantType === 'eraisik'}
+													onChange={(e) => {
+														setParticipantType(
+															e.target.value as 'eraisik' | 'ettevote'
+														);
+														// Reset forms when switching types
+														eraisikForm.reset();
+														ettevoteForm.reset();
+													}}
 												/>
 												<label htmlFor="eraisik">Eraisik</label>
 											</div>
@@ -92,48 +199,167 @@ const Osavotjad = () => {
 													name="participantType"
 													value="ettevote"
 													id="ettevote"
+													checked={participantType === 'ettevote'}
+													onChange={(e) => {
+														setParticipantType(
+															e.target.value as 'eraisik' | 'ettevote'
+														);
+														// Reset forms when switching types
+														eraisikForm.reset();
+														ettevoteForm.reset();
+													}}
 												/>
 												<label htmlFor="ettevote">Ettevõte</label>
 											</div>
 										</div>
 										<div className="flex mt-2 gap-12">
 											<div className="flex gap-4 flex-col">
-												<p>Eesnimi:</p>
-												<p>Perenimi:</p>
-												<p>Isikukood:</p>
-												<p>Maksmisviis:</p>
-												<p>Lisainfo:</p>
+												{participantType === 'eraisik' ? (
+													<>
+														<p>Eesnimi:</p>
+														<p>Perenimi:</p>
+														<p>Isikukood:</p>
+														<p>Maksmisviis:</p>
+														<p>Lisainfo:</p>
+													</>
+												) : (
+													<>
+														<p>Nimi:</p>
+														<p>Registrikood:</p>
+														<p>Osavõtjate arv:</p>
+														<p>Maksmisviis:</p>
+														<p>Lisainfo:</p>
+													</>
+												)}
 											</div>
 											<div className=" flex flex-col gap-2 w-64">
+												{participantType === 'eraisik' ? (
+													<>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...eraisikForm.register('eesnimi')}
+															/>
+															{eraisikForm.formState.errors.eesnimi && (
+																<p className="text-red-500 text-xs mt-1">
+																	{eraisikForm.formState.errors.eesnimi.message}
+																</p>
+															)}
+														</div>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...eraisikForm.register('perekonnanimi')}
+															/>
+															{eraisikForm.formState.errors.perekonnanimi && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		eraisikForm.formState.errors.perekonnanimi
+																			.message
+																	}
+																</p>
+															)}
+														</div>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...eraisikForm.register('isikukood')}
+															/>
+															{eraisikForm.formState.errors.isikukood && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		eraisikForm.formState.errors.isikukood
+																			.message
+																	}
+																</p>
+															)}
+														</div>
+													</>
+												) : (
+													<>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...ettevoteForm.register('nimi')}
+															/>
+															{ettevoteForm.formState.errors.nimi && (
+																<p className="text-red-500 text-xs mt-1">
+																	{ettevoteForm.formState.errors.nimi.message}
+																</p>
+															)}
+														</div>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...ettevoteForm.register('registrikood')}
+															/>
+															{ettevoteForm.formState.errors.registrikood && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		ettevoteForm.formState.errors.registrikood
+																			.message
+																	}
+																</p>
+															)}
+														</div>
+														<div>
+															<input
+																type="text"
+																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																{...ettevoteForm.register('osavotjateArv')}
+															/>
+															{ettevoteForm.formState.errors.osavotjateArv && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		ettevoteForm.formState.errors.osavotjateArv
+																			.message
+																	}
+																</p>
+															)}
+														</div>
+													</>
+												)}
 												<div>
-													<input
-														type="text"
+													<select
 														className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-													/>
-												</div>{' '}
-												<div>
-													<input
-														type="text"
-														className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-													/>
-												</div>
-												<div>
-													<input
-														type="text"
-														className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-													/>
-												</div>
-												<div>
-													<input
-														type="text"
-														className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-													/>
+														{...(participantType === 'eraisik'
+															? eraisikForm.register('maksmiseViis')
+															: ettevoteForm.register('maksmiseViis'))}
+													>
+														<option value="">Vali maksmisviis</option>
+														<option value="pangaülekanne">Pangaülekanne</option>
+														<option value="sularaha">Sularaha</option>
+													</select>
+													{participantType === 'eraisik' &&
+														eraisikForm.formState.errors.maksmiseViis && (
+															<p className="text-red-500 text-xs mt-1">
+																{
+																	eraisikForm.formState.errors.maksmiseViis
+																		.message
+																}
+															</p>
+														)}
+													{participantType === 'ettevote' &&
+														ettevoteForm.formState.errors.maksmiseViis && (
+															<p className="text-red-500 text-xs mt-1">
+																{
+																	ettevoteForm.formState.errors.maksmiseViis
+																		.message
+																}
+															</p>
+														)}
 												</div>
 												<div>
 													<textarea
 														className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none"
-														name="lisainfo"
-														id="lisainfo"
+														{...(participantType === 'eraisik'
+															? eraisikForm.register('lisainfo')
+															: ettevoteForm.register('lisainfo'))}
 													></textarea>
 												</div>
 											</div>
@@ -147,9 +373,10 @@ const Osavotjad = () => {
 											</button>
 											<button
 												type="submit"
+												disabled={isSubmitting}
 												className="bg-bermuda-500 hover:bg-bermuda-600 duration-100 cursor-pointer py-[2px] text-sm  text-white rounded-xs w-15 disabled:opacity-50"
 											>
-												Salvesta
+												{isSubmitting ? 'Salvestab...' : 'Salvesta'}
 											</button>
 										</div>
 									</div>

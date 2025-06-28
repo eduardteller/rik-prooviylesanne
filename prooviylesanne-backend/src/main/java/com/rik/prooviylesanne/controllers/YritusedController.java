@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -51,13 +52,23 @@ public class YritusedController {
     }
 
     @GetMapping("/get-yritused")
-    public ResponseEntity<?> getAllYritusedWithCount() {
+    public ResponseEntity<?> getAllYritusedWithCount(@RequestParam(required = false) Long id) {
         try {
-            List<YritusedDto> yritusedDtos = yritusedService.getAllYritusedAsDto();
-            return ResponseEntity.ok(yritusedDtos);
+            if (id != null) {
+                Optional<YritusedDto> yritusDto = yritusedService.getYritusDtoById(id);
+                if (yritusDto.isPresent()) {
+                    return ResponseEntity.ok(yritusDto.get());
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(new YritusedDto()); // Return empty DTO instead of String
+                }
+            } else {
+                List<YritusedDto> yritusedDtos = yritusedService.getAllYritusedAsDto();
+                return ResponseEntity.ok(yritusedDtos);
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve events with counts: " + e.getMessage());
+                    .body("Failed to retrieve events: " + e.getMessage());
         }
     }
 
