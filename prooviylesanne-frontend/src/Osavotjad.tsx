@@ -6,6 +6,8 @@ import { formatDate, useEvent } from './api/events';
 import {
 	useAddEraisik,
 	useAddEttevote,
+	useDeleteFyysilineIsik,
+	useDeleteJuriidilineIsik,
 	useParticipants,
 } from './api/participants';
 import Footer from './components/Footer';
@@ -38,6 +40,8 @@ const Osavotjad = () => {
 
 	const addEraisikMutation = useAddEraisik();
 	const addEttevoteMutation = useAddEttevote();
+	const deleteFyysilineIsikMutation = useDeleteFyysilineIsik();
+	const deleteJuriidilineIsikMutation = useDeleteJuriidilineIsik();
 
 	const eraisikForm = useForm<EraisikFormData>({
 		resolver: zodResolver(eraisikSchema),
@@ -87,6 +91,38 @@ const Osavotjad = () => {
 				alert('Viga ettevõte lisamisel!');
 			},
 		});
+	};
+
+	const handleDeleteFyysilineIsik = (isikId: number) => {
+		if (
+			window.confirm('Kas olete kindel, et soovite selle eraisiku kustutada?')
+		) {
+			deleteFyysilineIsikMutation.mutate(isikId, {
+				onSuccess: () => {
+					alert('Eraisik kustutatud edukalt!');
+				},
+				onError: (error) => {
+					console.error('Error deleting fyysiline isik:', error);
+					alert('Viga eraisiku kustutamisel!');
+				},
+			});
+		}
+	};
+
+	const handleDeleteJuriidilineIsik = (isikId: number) => {
+		if (
+			window.confirm('Kas olete kindel, et soovite selle ettevõtte kustutada?')
+		) {
+			deleteJuriidilineIsikMutation.mutate(isikId, {
+				onSuccess: () => {
+					alert('Ettevõte kustutatud edukalt!');
+				},
+				onError: (error) => {
+					console.error('Error deleting juriidiline isik:', error);
+					alert('Viga ettevõtte kustutamisel!');
+				},
+			});
+		}
 	};
 
 	const isSubmitting =
@@ -168,7 +204,12 @@ const Osavotjad = () => {
 																<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
 																	Vaata
 																</button>
-																<button className="text-xs  font-bold text-zinc-500 uppercase cursor-pointer">
+																<button
+																	className="text-xs  font-bold text-zinc-500 uppercase cursor-pointer"
+																	onClick={() =>
+																		handleDeleteFyysilineIsik(isik.id)
+																	}
+																>
 																	Kustuta
 																</button>
 															</div>
@@ -188,7 +229,12 @@ const Osavotjad = () => {
 																	<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
 																		Vaata
 																	</button>
-																	<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																	<button
+																		className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																		onClick={() =>
+																			handleDeleteJuriidilineIsik(isik.id)
+																		}
+																	>
 																		Kustuta
 																	</button>
 																</div>

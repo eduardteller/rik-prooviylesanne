@@ -94,13 +94,38 @@ const fetchParticipants = async (
 	return response.json();
 };
 
+const deleteFyysilineIsik = async (id: number): Promise<void> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/delete-fyysiline-isik?id=${id}`,
+		{
+			method: 'GET',
+		}
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to delete fyysiline isik');
+	}
+};
+
+const deleteJuriidilineIsik = async (id: number): Promise<void> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/delete-juriidiline-isik?id=${id}`,
+		{
+			method: 'GET',
+		}
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to delete juriidiline isik');
+	}
+};
+
 export const useAddEraisik = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: addEraisik,
 		onSuccess: (_, variables) => {
-			// Invalidate and refetch participants after successful creation
 			if (variables.yritusId) {
 				queryClient.invalidateQueries({
 					queryKey: ['participants', variables.yritusId],
@@ -119,7 +144,6 @@ export const useAddEttevote = () => {
 	return useMutation({
 		mutationFn: addEttevote,
 		onSuccess: (_, variables) => {
-			// Invalidate and refetch participants after successful creation
 			if (variables.yritusId) {
 				queryClient.invalidateQueries({
 					queryKey: ['participants', variables.yritusId],
@@ -139,5 +163,31 @@ export const useParticipants = (yritusId: string) => {
 		enabled: !!yritusId, // Only run query if yritusId is provided
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+export const useDeleteFyysilineIsik = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteFyysilineIsik,
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['participants'],
+			});
+		},
+	});
+};
+
+export const useDeleteJuriidilineIsik = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteJuriidilineIsik,
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['participants'],
+			});
+		},
 	});
 };
