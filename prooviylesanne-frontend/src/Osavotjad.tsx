@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router';
 import { formatDate, useEvent } from './api/events';
-import { useAddEraisik, useAddEttevote } from './api/participants';
+import {
+	useAddEraisik,
+	useAddEttevote,
+	useParticipants,
+} from './api/participants';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import {
@@ -24,6 +28,12 @@ const Osavotjad = () => {
 		isLoading: eventLoading,
 		error: eventError,
 	} = useEvent(id || '');
+
+	const {
+		data: participants,
+		isLoading: participantsLoading,
+		error: participantsError,
+	} = useParticipants(id || '');
 
 	const addEraisikMutation = useAddEraisik();
 	const addEttevoteMutation = useAddEttevote();
@@ -96,16 +106,17 @@ const Osavotjad = () => {
 						<div>
 							<div className=" flex flex-col gap-8 ml-64">
 								<h2 className="text-bermuda-500 text-2xl">Osavõtjad</h2>
-								<div className="flex gap-12">
-									<div className="flex gap-4 flex-col">
+								<div className="flex ">
+									<div className="flex gap-4 w-36 flex-col">
 										<p>Ürituse nimi:</p>
 										<p>Toimumisaeg:</p>
 										<p>Koht:</p>
 										<p>Osavõtjad:</p>
 									</div>
-									<div className="flex gap-4 text-sm flex-col flex-1">
+									<div className="flex  gap-5 text-sm flex-col flex-1">
 										{eventLoading ? (
 											<>
+												<p>Laeb...</p>
 												<p>Laeb...</p>
 												<p>Laeb...</p>
 												<p>Laeb...</p>
@@ -121,45 +132,80 @@ const Osavotjad = () => {
 												<p>{event.nimi}</p>
 												<p>{formatDate(event.aeg)}</p>
 												<p>{event.koht}</p>
+												{/* <p>
+													{participants
+														? participants.fyysilisedIsikud.length +
+														  participants.juriidilisedIsikud.length
+														: event.isikudCount || 0}{' '}
+													osavõtjat
+												</p> */}
 											</>
 										) : (
 											<>
 												<p>-</p>
 												<p>-</p>
 												<p>-</p>
+												<p>-</p>
 											</>
 										)}
-										<div className="py-8 w-4/5 flex flex-col gap-2">
-											<div className="flex text-sm justify-between">
-												<p>1. Mihkel Amman</p>
-												<p>503071650336</p>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Vaata
-												</button>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Kustuta
-												</button>
-											</div>
-											<div className="flex text-sm justify-between">
-												<p>1. Mihkel Amman</p>
-												<p>503071650336</p>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Vaata
-												</button>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Kustuta
-												</button>
-											</div>
-											<div className="flex text-sm justify-between">
-												<p>1. Mihkel Amman</p>
-												<p>503071650336</p>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Vaata
-												</button>
-												<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
-													Kustuta
-												</button>
-											</div>
+										<div className="pt-8 gap-4 flex flex-col h-32 overflow-y-auto">
+											{participantsLoading ? (
+												<p className="text-sm">Laeb osavõtjaid...</p>
+											) : participantsError ? (
+												<p className="text-red-500 text-sm">
+													Viga osavõtjate laadimisel
+												</p>
+											) : participants ? (
+												<>
+													{participants.fyysilisedIsikud.map((isik, index) => (
+														<div key={isik.id} className="flex text-sm">
+															<p className="w-44">
+																{index + 1}. {isik.eesnimi} {isik.perekonnanimi}
+															</p>
+															<p className="w-44">{isik.isikukood}</p>
+															<div className="  flex items-center gap-8">
+																<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																	Vaata
+																</button>
+																<button className="text-xs  font-bold text-zinc-500 uppercase cursor-pointer">
+																	Kustuta
+																</button>
+															</div>
+														</div>
+													))}
+													{participants.juriidilisedIsikud.map(
+														(isik, index) => (
+															<div key={isik.id} className="flex text-sm">
+																<p className="w-44">
+																	{participants.fyysilisedIsikud.length +
+																		index +
+																		1}
+																	. {isik.nimi}
+																</p>
+																<p className="w-44">{isik.registrikood}</p>
+																<div className="  flex items-center gap-8">
+																	<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																		Vaata
+																	</button>
+																	<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																		Kustuta
+																	</button>
+																</div>
+															</div>
+														)
+													)}
+													{participants.fyysilisedIsikud.length === 0 &&
+														participants.juriidilisedIsikud.length === 0 && (
+															<p className="text-sm text-gray-500">
+																Osavõtjaid ei ole veel lisatud
+															</p>
+														)}
+												</>
+											) : (
+												<p className="text-sm text-gray-500">
+													Osavõtjaid ei ole veel lisatud
+												</p>
+											)}
 										</div>
 									</div>
 								</div>
@@ -212,8 +258,8 @@ const Osavotjad = () => {
 												<label htmlFor="ettevote">Ettevõte</label>
 											</div>
 										</div>
-										<div className="flex mt-2 gap-12">
-											<div className="flex gap-4 flex-col">
+										<div className="flex mt-2 ">
+											<div className="flex gap-4 w-34 flex-col">
 												{participantType === 'eraisik' ? (
 													<>
 														<p>Eesnimi:</p>
@@ -364,7 +410,7 @@ const Osavotjad = () => {
 												</div>
 											</div>
 										</div>
-										<div className="flex gap-2">
+										<div className="flex mt-8 gap-2">
 											<button
 												type="button"
 												className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "

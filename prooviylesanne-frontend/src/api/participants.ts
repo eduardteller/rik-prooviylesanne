@@ -1,4 +1,32 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+export interface MaksmiseViis {
+	id: number;
+	maksmiseViis: string;
+}
+
+export interface FyysilineIsik {
+	id: number;
+	eesnimi: string;
+	perekonnanimi: string;
+	isikukood: string;
+	maksmiseViis: MaksmiseViis;
+	lisainfo: string;
+}
+
+export interface JuriidilineIsik {
+	id: number;
+	nimi: string;
+	registrikood: string;
+	osavotjateArv: string;
+	maksmiseViis: MaksmiseViis;
+	lisainfo: string;
+}
+
+export interface ParticipantsResponse {
+	fyysilisedIsikud: FyysilineIsik[];
+	juriidilisedIsikud: JuriidilineIsik[];
+}
 
 export interface EraisikRequest {
 	eesnimi: string;
@@ -52,14 +80,31 @@ const addEttevote = async (data: EttevoteRequest): Promise<void> => {
 	}
 };
 
+const fetchParticipants = async (
+	yritusId: string
+): Promise<ParticipantsResponse> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/get-isikud?yritusId=${yritusId}`
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch participants');
+	}
+
+	return response.json();
+};
+
 export const useAddEraisik = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: addEraisik,
 		onSuccess: (_, variables) => {
-			queryClient.invalidateQueries({ queryKey: ['participants'] });
+			// Invalidate and refetch participants after successful creation
 			if (variables.yritusId) {
+				queryClient.invalidateQueries({
+					queryKey: ['participants', variables.yritusId],
+				});
 				queryClient.invalidateQueries({
 					queryKey: ['event', variables.yritusId],
 				});
@@ -75,13 +120,24 @@ export const useAddEttevote = () => {
 		mutationFn: addEttevote,
 		onSuccess: (_, variables) => {
 			// Invalidate and refetch participants after successful creation
-			queryClient.invalidateQueries({ queryKey: ['participants'] });
-			// Also invalidate the specific event to update participant count
 			if (variables.yritusId) {
+				queryClient.invalidateQueries({
+					queryKey: ['participants', variables.yritusId],
+				});
 				queryClient.invalidateQueries({
 					queryKey: ['event', variables.yritusId],
 				});
 			}
 		},
+	});
+};
+
+export const useParticipants = (yritusId: string) => {
+	return useQuery({
+		queryKey: ['participants', yritusId],
+		queryFn: () => fetchParticipants(yritusId),
+		enabled: !!yritusId, // Only run query if yritusId is provided
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
 	});
 };
