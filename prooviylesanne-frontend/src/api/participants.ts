@@ -120,6 +120,30 @@ const deleteJuriidilineIsik = async (id: number): Promise<void> => {
 	}
 };
 
+const fetchFyysilineIsik = async (id: string): Promise<FyysilineIsik> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/get-fyysiline-isik?id=${id}`
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch fyysiline isik');
+	}
+
+	return response.json();
+};
+
+const fetchJuriidilineIsik = async (id: string): Promise<JuriidilineIsik> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/get-juriidiline-isik?id=${id}`
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch juriidiline isik');
+	}
+
+	return response.json();
+};
+
 export const useAddEraisik = () => {
 	const queryClient = useQueryClient();
 
@@ -189,5 +213,25 @@ export const useDeleteJuriidilineIsik = () => {
 				queryKey: ['participants'],
 			});
 		},
+	});
+};
+
+export const useFyysilineIsik = (id: string, enabled = true) => {
+	return useQuery({
+		queryKey: ['fyysiline-isik', id],
+		queryFn: () => fetchFyysilineIsik(id),
+		enabled: enabled && !!id,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+export const useJuriidilineIsik = (id: string, enabled = true) => {
+	return useQuery({
+		queryKey: ['juriidiline-isik', id],
+		queryFn: () => fetchJuriidilineIsik(id),
+		enabled: enabled && !!id,
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
 	});
 };
