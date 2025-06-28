@@ -46,6 +46,24 @@ export interface EttevoteRequest {
 	yritusId?: string;
 }
 
+export interface FyysilineIsikUpdateRequest {
+	id: number;
+	eesnimi: string;
+	perekonnanimi: string;
+	isikukood: string;
+	maksmiseViis: string;
+	lisainfo?: string;
+}
+
+export interface JuriidilineIsikUpdateRequest {
+	id: number;
+	nimi: string;
+	registrikood: string;
+	osavotjateArv: string;
+	maksmiseViis: string;
+	lisainfo?: string;
+}
+
 const addEraisik = async (data: EraisikRequest): Promise<void> => {
 	const response = await fetch(
 		'http://localhost:8080/api/isikud/add-fyysiline-isik',
@@ -144,6 +162,44 @@ const fetchJuriidilineIsik = async (id: string): Promise<JuriidilineIsik> => {
 	return response.json();
 };
 
+const updateFyysilineIsik = async (
+	data: FyysilineIsikUpdateRequest
+): Promise<void> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/update-fyysiline-isik?id=${data.id}`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		}
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to update fyysiline isik');
+	}
+};
+
+const updateJuriidilineIsik = async (
+	data: JuriidilineIsikUpdateRequest
+): Promise<void> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/update-juriidiline-isik?id=${data.id}`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		}
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to update juriidiline isik');
+	}
+};
+
 export const useAddEraisik = () => {
 	const queryClient = useQueryClient();
 
@@ -233,5 +289,37 @@ export const useJuriidilineIsik = (id: string, enabled = true) => {
 		enabled: enabled && !!id,
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+export const useUpdateFyysilineIsik = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: updateFyysilineIsik,
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ['fyysiline-isik', variables.id.toString()],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['participants'],
+			});
+		},
+	});
+};
+
+export const useUpdateJuriidilineIsik = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: updateJuriidilineIsik,
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({
+				queryKey: ['juriidiline-isik', variables.id.toString()],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['participants'],
+			});
+		},
 	});
 };

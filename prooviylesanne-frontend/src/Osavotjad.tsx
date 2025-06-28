@@ -201,7 +201,12 @@ const Osavotjad = () => {
 															</p>
 															<p className="w-44">{isik.isikukood}</p>
 															<div className="  flex items-center gap-8">
-																<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																<button
+																	className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																	onClick={() =>
+																		navigate(`/osavotjad/eraisik/${isik.id}`)
+																	}
+																>
 																	Vaata
 																</button>
 																<button
@@ -226,7 +231,14 @@ const Osavotjad = () => {
 																</p>
 																<p className="w-44">{isik.registrikood}</p>
 																<div className="  flex items-center gap-8">
-																	<button className="text-xs font-bold text-zinc-500 uppercase cursor-pointer">
+																	<button
+																		className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																		onClick={() =>
+																			navigate(
+																				`/osavotjad/juriidiline/${isik.id}`
+																			)
+																		}
+																	>
 																		Vaata
 																	</button>
 																	<button

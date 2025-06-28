@@ -2,7 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router';
-import { useFyysilineIsik, useJuriidilineIsik } from './api/participants';
+import {
+	useFyysilineIsik,
+	useJuriidilineIsik,
+	useUpdateFyysilineIsik,
+	useUpdateJuriidilineIsik,
+} from './api/participants';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import {
@@ -15,7 +20,6 @@ import {
 const OsavotjadDetail = () => {
 	const { id, type } = useParams<{ id: string; type: string }>();
 
-	// Fetch data based on type
 	const {
 		data: fyysilineIsikData,
 		isLoading: isFyysilineLoading,
@@ -28,13 +32,11 @@ const OsavotjadDetail = () => {
 		error: juriidilineError,
 	} = useJuriidilineIsik(id || '', type === 'juriidiline');
 
-	// Determine which data to use
 	const isEraisik = type === 'eraisik';
 	const currentData = isEraisik ? fyysilineIsikData : juriidilineIsikData;
 	const isLoading = isEraisik ? isFyysilineLoading : isJuriidilineLoading;
 	const error = isEraisik ? fyysilineError : juriidilineError;
 
-	// Initialize forms for both types
 	const eraisikForm = useForm<EraisikFormData>({
 		resolver: zodResolver(eraisikSchema),
 	});
@@ -45,7 +47,9 @@ const OsavotjadDetail = () => {
 
 	const currentForm = isEraisik ? eraisikForm : ettevoteForm;
 
-	// Reset form when data is loaded
+	const updateFyysilineIsikMutation = useUpdateFyysilineIsik();
+	const updateJuriidilineIsikMutation = useUpdateJuriidilineIsik();
+
 	useEffect(() => {
 		if (currentData) {
 			if (isEraisik && 'eesnimi' in currentData) {
@@ -68,9 +72,32 @@ const OsavotjadDetail = () => {
 		}
 	}, [currentData, isEraisik, eraisikForm, ettevoteForm]);
 
-	const onSubmit = (data: EraisikFormData | EttevoteFormData) => {
-		console.log('Form data:', data);
-		// Handle form submission here
+	const onSubmit = async (data: EraisikFormData | EttevoteFormData) => {
+		if (!id) return;
+
+		try {
+			if (isEraisik && 'eesnimi' in data) {
+				await updateFyysilineIsikMutation.mutateAsync({
+					id: parseInt(id),
+					eesnimi: data.eesnimi,
+					perekonnanimi: data.perekonnanimi,
+					isikukood: data.isikukood,
+					maksmiseViis: data.maksmiseViis,
+					lisainfo: data.lisainfo || '',
+				});
+			} else if (!isEraisik && 'nimi' in data) {
+				await updateJuriidilineIsikMutation.mutateAsync({
+					id: parseInt(id),
+					nimi: data.nimi,
+					registrikood: data.registrikood,
+					osavotjateArv: data.osavotjateArv,
+					maksmiseViis: data.maksmiseViis,
+					lisainfo: data.lisainfo || '',
+				});
+			}
+		} catch (error) {
+			console.error('Failed to update participant:', error);
+		}
 	};
 
 	if (isLoading) {
@@ -284,15 +311,23 @@ const OsavotjadDetail = () => {
 										<div className="flex mt-8 gap-2">
 											<button
 												type="button"
+												onClick={() => window.history.back()}
 												className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "
 											>
 												Tagasi
 											</button>
 											<button
 												type="submit"
+												disabled={
+													updateFyysilineIsikMutation.isPending ||
+													updateJuriidilineIsikMutation.isPending
+												}
 												className="bg-bermuda-500 hover:bg-bermuda-600 duration-100 cursor-pointer py-[2px] text-sm  text-white rounded-xs w-15 disabled:opacity-50"
 											>
-												Salvesta
+												{updateFyysilineIsikMutation.isPending ||
+												updateJuriidilineIsikMutation.isPending
+													? 'Salvestame...'
+													: 'Salvesta'}
 											</button>
 										</div>
 									</div>
