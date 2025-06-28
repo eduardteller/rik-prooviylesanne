@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { formatDate, useEvent } from './api/events';
 import {
 	useAddEraisik,
@@ -19,6 +19,7 @@ import {
 
 const Osavotjad = () => {
 	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
 	const [participantType, setParticipantType] = useState<
 		'eraisik' | 'ettevote'
 	>('eraisik');
@@ -413,6 +414,7 @@ const Osavotjad = () => {
 										<div className="flex mt-8 gap-2">
 											<button
 												type="button"
+												onClick={() => navigate('/')}
 												className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "
 											>
 												Tagasi
