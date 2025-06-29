@@ -29,29 +29,32 @@ export const EventItem = ({
 	};
 	return (
 		<div id={event.id.toString()} className="w-full flex justify-between">
-			<p>
-				{index + 1}. {event.nimi}
-			</p>
-			<div className="flex gap-12">
-				<p>{formatDate(event.aeg)}</p>
-				<div className="flex gap-2 items-center">
+			<div className="flex gap-2 items-center flex-1">
+				<p className=" w-24 truncate">
 					{' '}
+					{index + 1}. {event.nimi}{' '}
+				</p>
+				<p className=" w-16 truncate">{formatDate(event.aeg)}</p>
+				<p className=" w-28 truncate">{event.koht}</p>
+				<p className=" w-8 truncate">{event.isikudCount}</p>
+			</div>
+			<div className="flex gap-2 items-center">
+				{' '}
+				<button
+					onClick={() => navigate(`/osavotjad/${event.id}`)}
+					className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer"
+				>
+					OSAVÕTJAD
+				</button>
+				{showRemoveButton && (
 					<button
-						onClick={() => navigate(`/osavotjad/${event.id}`)}
-						className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer"
+						onClick={handleDelete}
+						disabled={deleteEventMutation.isPending}
+						className="font-bold opacity-60 uppercase duration-100 hover:opacity-80 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
 					>
-						OSAVÕTJAD
+						<img src="/remove.svg" className="w-3 h-3" alt="" />
 					</button>
-					{showRemoveButton && (
-						<button
-							onClick={handleDelete}
-							disabled={deleteEventMutation.isPending}
-							className="font-bold opacity-60 uppercase duration-100 hover:opacity-80 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-						>
-							<img src="/remove.svg" className="w-3 h-3" alt="" />
-						</button>
-					)}
-				</div>
+				)}
 			</div>
 		</div>
 	);

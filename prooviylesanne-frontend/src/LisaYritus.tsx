@@ -1,26 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { z } from 'zod';
 import { useCreateEvent } from './api/events';
 import Footer from './components/Footer';
 import Header from './components/Header';
-
-const eventSchema = z.object({
-	nimi: z.string().min(1, 'Ürituse nimi on kohustuslik'),
-	aeg: z
-		.string()
-		.min(1, 'Toimumisaeg on kohustuslik')
-		.refine((value) => {
-			const selectedDate = new Date(value);
-			const now = new Date();
-			return selectedDate > now;
-		}, 'Toimumisaeg peab olema tulevikus'),
-	koht: z.string().min(1, 'Koht on kohustuslik'),
-	lisainfo: z.string().optional(),
-});
-
-type EventFormData = z.infer<typeof eventSchema>;
+import { eventSchema, type EventFormData } from './schemas/eventSchemas';
 
 const LisaYritus = () => {
 	const createEventMutation = useCreateEvent();
