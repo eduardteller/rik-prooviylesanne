@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,9 @@ public class YritusedService {
     }
 
     public Yritused saveYritus(Yritused yritus) {
+        if (isEventInPast(yritus.getAeg())) {
+            throw new IllegalArgumentException("Cannot add an event with a date in the past");
+        }
         return yritusedRepository.save(yritus);
     }
 
@@ -125,11 +129,24 @@ public class YritusedService {
 
         if (yritusOpt.isPresent()) {
             Yritused yritus = yritusOpt.get();
+            if (isEventInPast(yritus.getAeg())) {
+                throw new IllegalArgumentException("Cannot delete an event that has already passed");
+            }
             yritusedIsikudRepository.deleteByYritus(yritus);
             yritusedRepository.delete(yritus);
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Checks if the event time is in the past
+     *
+     * @param eventTime The time of the event
+     * @return true if the event time is before the current time
+     */
+    private boolean isEventInPast(OffsetDateTime eventTime) {
+        return eventTime != null && eventTime.isBefore(OffsetDateTime.now());
     }
 }

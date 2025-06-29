@@ -45,6 +45,9 @@ public class YritusedController {
 
             Yritused savedYritus = yritusedService.saveYritus(yritus);
             return ResponseEntity.ok(savedYritus);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to add event: " + e.getMessage());
@@ -83,6 +86,9 @@ public class YritusedController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Event with ID " + id + " not found.");
             }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(e.getMessage());

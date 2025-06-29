@@ -1,9 +1,0 @@
-POST http://localhost:8080/add-yritus
-Content-Type: application/json
-
-{
-  "nimi": "Test Event",
-  "aeg": "2025-07-01T15:00:00+03:00",
-  "koht": "Test Location",
-  "lisainfo": "Additional information about the test event"
-}
