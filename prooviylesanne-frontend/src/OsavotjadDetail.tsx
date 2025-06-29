@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import {
 	useFyysilineIsik,
 	useJuriidilineIsik,
@@ -19,6 +19,16 @@ import {
 
 const OsavotjadDetail = () => {
 	const { id, type } = useParams<{ id: string; type: string }>();
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	// Get the previous location from navigation state, fallback to home page
+	const previousLocation = (location.state as { from?: string })?.from || '/';
+
+	// Function to navigate back to the previous page
+	const goBack = () => {
+		navigate(previousLocation);
+	};
 
 	const {
 		data: fyysilineIsikData,
@@ -85,6 +95,8 @@ const OsavotjadDetail = () => {
 					maksmiseViis: data.maksmiseViis,
 					lisainfo: data.lisainfo || '',
 				});
+				alert('Eraisiku andmed uuendatud edukalt!');
+				goBack();
 			} else if (!isEraisik && 'nimi' in data) {
 				await updateJuriidilineIsikMutation.mutateAsync({
 					id: parseInt(id),
@@ -94,6 +106,8 @@ const OsavotjadDetail = () => {
 					maksmiseViis: data.maksmiseViis,
 					lisainfo: data.lisainfo || '',
 				});
+				alert('Juriidilise isiku andmed uuendatud edukalt!');
+				goBack();
 			}
 		} catch (error) {
 			console.error('Failed to update participant:', error);
@@ -106,8 +120,14 @@ const OsavotjadDetail = () => {
 				<div className="relative mx-auto w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 					<div className="mt-4 flex flex-col w-full">
+						<div className="flex h-18 w-full overflow-hidden">
+							<div className="py-4 pl-8 pr-22 bg-bermuda-500 text-3xl font-light text-white">
+								<h2>Osavõtja info</h2>
+							</div>
+							<img src="/libled.jpg" className="object-cover flex-1" alt="" />
+						</div>{' '}
 						<div className="bg-white px-8 pt-8 pb-20 flex flex-col">
-							<div className="flex justify-center items-center h-64">
+							<div className="flex justify-center items-center h-82">
 								<p>Laadimine...</p>
 							</div>
 						</div>
@@ -124,8 +144,14 @@ const OsavotjadDetail = () => {
 				<div className="relative mx-auto w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 					<div className="mt-4 flex flex-col w-full">
+						<div className="flex h-18 w-full overflow-hidden">
+							<div className="py-4 pl-8 pr-22 bg-bermuda-500 text-3xl font-light text-white">
+								<h2>Osavõtja info</h2>
+							</div>
+							<img src="/libled.jpg" className="object-cover flex-1" alt="" />
+						</div>{' '}
 						<div className="bg-white px-8 pt-8 pb-20 flex flex-col">
-							<div className="flex justify-center items-center h-64">
+							<div className="flex justify-center items-center h-82">
 								<p className="text-red-500">
 									Viga andmete laadimisel: {error.message}
 								</p>
@@ -311,7 +337,7 @@ const OsavotjadDetail = () => {
 										<div className="flex mt-8 gap-2">
 											<button
 												type="button"
-												onClick={() => window.history.back()}
+												onClick={goBack}
 												className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "
 											>
 												Tagasi

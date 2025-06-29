@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { formatDate, useEvent } from './api/events';
 import {
 	useAddEraisik,
@@ -22,6 +22,7 @@ import {
 const Osavotjad = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [participantType, setParticipantType] = useState<
 		'eraisik' | 'ettevote'
 	>('eraisik');
@@ -71,6 +72,7 @@ const Osavotjad = () => {
 			onSuccess: () => {
 				eraisikForm.reset();
 				alert('Eraisik lisatud edukalt!');
+				navigate(`/`);
 			},
 			onError: (error) => {
 				console.error('Error adding eraisik:', error);
@@ -85,6 +87,7 @@ const Osavotjad = () => {
 			onSuccess: () => {
 				ettevoteForm.reset();
 				alert('Ettevõte lisatud edukalt!');
+				navigate(`/`);
 			},
 			onError: (error) => {
 				console.error('Error adding ettevote:', error);
@@ -148,9 +151,10 @@ const Osavotjad = () => {
 										<p>Ürituse nimi:</p>
 										<p>Toimumisaeg:</p>
 										<p>Koht:</p>
+										<p>Osavõtjade arv:</p>
 										<p>Osavõtjad:</p>
 									</div>
-									<div className="flex  gap-5 text-sm flex-col flex-1">
+									<div className="flex text-gray-700  gap-5 text-sm flex-col flex-1">
 										{eventLoading ? (
 											<>
 												<p>Laeb...</p>
@@ -169,13 +173,7 @@ const Osavotjad = () => {
 												<p>{event.nimi}</p>
 												<p>{formatDate(event.aeg)}</p>
 												<p>{event.koht}</p>
-												{/* <p>
-													{participants
-														? participants.fyysilisedIsikud.length +
-														  participants.juriidilisedIsikud.length
-														: event.isikudCount || 0}{' '}
-													osavõtjat
-												</p> */}
+												<p>{event.isikudCount} osavõtjat</p>
 											</>
 										) : (
 											<>
@@ -185,7 +183,7 @@ const Osavotjad = () => {
 												<p>-</p>
 											</>
 										)}
-										<div className="pt-8 gap-4 flex flex-col h-32 overflow-y-auto">
+										<div className=" mt-4 gap-4 flex flex-col h-32 overflow-y-auto">
 											{participantsLoading ? (
 												<p className="text-sm">Laeb osavõtjaid...</p>
 											) : participantsError ? (
@@ -202,15 +200,17 @@ const Osavotjad = () => {
 															<p className="w-44">{isik.isikukood}</p>
 															<div className="  flex items-center gap-8">
 																<button
-																	className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																	className="text-xs font-bold text-gray-500 hover:text-gray-600 uppercase cursor-pointer"
 																	onClick={() =>
-																		navigate(`/osavotjad/eraisik/${isik.id}`)
+																		navigate(`/osavotjad/eraisik/${isik.id}`, {
+																			state: { from: location.pathname },
+																		})
 																	}
 																>
 																	Vaata
 																</button>
 																<button
-																	className="text-xs  font-bold text-zinc-500 uppercase cursor-pointer"
+																	className="text-xs  font-bold text-gray-500 hover:text-gray-600 uppercase cursor-pointer"
 																	onClick={() =>
 																		handleDeleteFyysilineIsik(isik.id)
 																	}
@@ -235,7 +235,8 @@ const Osavotjad = () => {
 																		className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
 																		onClick={() =>
 																			navigate(
-																				`/osavotjad/juriidiline/${isik.id}`
+																				`/osavotjad/juriidiline/${isik.id}`,
+																				{ state: { from: location.pathname } }
 																			)
 																		}
 																	>

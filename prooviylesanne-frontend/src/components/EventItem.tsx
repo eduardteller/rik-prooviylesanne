@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { formatDate, useDeleteEvent, type Event } from '../api/events';
 
 interface EventItemProps {
@@ -13,6 +13,7 @@ export const EventItem = ({
 	showRemoveButton = false,
 }: EventItemProps) => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const deleteEventMutation = useDeleteEvent();
 	const handleDelete = () => {
 		if (
@@ -41,7 +42,11 @@ export const EventItem = ({
 			<div className="flex gap-2 items-center">
 				{' '}
 				<button
-					onClick={() => navigate(`/osavotjad/${event.id}`)}
+					onClick={() =>
+						navigate(`/osavotjad/${event.id}`, {
+							state: { from: location.pathname },
+						})
+					}
 					className="font-bold text-xs text-zinc-400 duration-100 hover:text-zinc-500 uppercase cursor-pointer"
 				>
 					OSAVÕTJAD
