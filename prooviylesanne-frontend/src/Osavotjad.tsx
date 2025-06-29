@@ -131,6 +131,8 @@ const Osavotjad = () => {
 	const isSubmitting =
 		addEraisikMutation.isPending || addEttevoteMutation.isPending;
 
+	const isEventExpired = event ? new Date(event.aeg) < new Date() : false;
+
 	return (
 		<main className="bg-[#eef2f5] min-h-screen">
 			<div className="relative mx-auto  w-full max-w-5xl py-8 flex flex-col">
@@ -183,7 +185,7 @@ const Osavotjad = () => {
 												<p>-</p>
 											</>
 										)}
-										<div className=" mt-4 gap-4 flex flex-col h-32 overflow-y-auto">
+										<div className=" mt-4 gap-4 flex flex-col h-24 overflow-y-auto">
 											{participantsLoading ? (
 												<p className="text-sm">Laeb osavõtjaid...</p>
 											) : participantsError ? (
@@ -269,225 +271,233 @@ const Osavotjad = () => {
 										</div>
 									</div>
 								</div>
-								<form
-									onSubmit={
-										participantType === 'eraisik'
-											? eraisikForm.handleSubmit(onSubmitEraisik)
-											: ettevoteForm.handleSubmit(onSubmitEttevote)
-									}
-								>
-									<div className=" flex flex-col  ">
-										<h2 className="text-bermuda-500 text-2xl">
-											Osavõtjate lisamine
-										</h2>
-										<div className="flex ml-34 mt-8 gap-16">
-											<div className="flex gap-1 items-center">
-												<input
-													type="radio"
-													name="participantType"
-													value="eraisik"
-													id="eraisik"
-													checked={participantType === 'eraisik'}
-													onChange={(e) => {
-														setParticipantType(
-															e.target.value as 'eraisik' | 'ettevote'
-														);
-														// Reset forms when switching types
-														eraisikForm.reset();
-														ettevoteForm.reset();
-													}}
-												/>
-												<label htmlFor="eraisik">Eraisik</label>
-											</div>
-											<div className="flex gap-1 items-center">
-												<input
-													type="radio"
-													name="participantType"
-													value="ettevote"
-													id="ettevote"
-													checked={participantType === 'ettevote'}
-													onChange={(e) => {
-														setParticipantType(
-															e.target.value as 'eraisik' | 'ettevote'
-														);
-														// Reset forms when switching types
-														eraisikForm.reset();
-														ettevoteForm.reset();
-													}}
-												/>
-												<label htmlFor="ettevote">Ettevõte</label>
-											</div>
-										</div>
-										<div className="flex mt-2 ">
-											<div className="flex gap-4 w-34 flex-col">
-												{participantType === 'eraisik' ? (
-													<>
-														<p>Eesnimi:</p>
-														<p>Perenimi:</p>
-														<p>Isikukood:</p>
-														<p>Maksmisviis:</p>
-														<p>Lisainfo:</p>
-													</>
-												) : (
-													<>
-														<p>Nimi:</p>
-														<p>Registrikood:</p>
-														<p>Osavõtjate arv:</p>
-														<p>Maksmisviis:</p>
-														<p>Lisainfo:</p>
-													</>
-												)}
-											</div>
-											<div className=" flex flex-col gap-2 w-64">
-												{participantType === 'eraisik' ? (
-													<>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...eraisikForm.register('eesnimi')}
-															/>
-															{eraisikForm.formState.errors.eesnimi && (
-																<p className="text-red-500 text-xs mt-1">
-																	{eraisikForm.formState.errors.eesnimi.message}
-																</p>
-															)}
-														</div>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...eraisikForm.register('perekonnanimi')}
-															/>
-															{eraisikForm.formState.errors.perekonnanimi && (
-																<p className="text-red-500 text-xs mt-1">
-																	{
-																		eraisikForm.formState.errors.perekonnanimi
-																			.message
-																	}
-																</p>
-															)}
-														</div>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...eraisikForm.register('isikukood')}
-															/>
-															{eraisikForm.formState.errors.isikukood && (
-																<p className="text-red-500 text-xs mt-1">
-																	{
-																		eraisikForm.formState.errors.isikukood
-																			.message
-																	}
-																</p>
-															)}
-														</div>
-													</>
-												) : (
-													<>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...ettevoteForm.register('nimi')}
-															/>
-															{ettevoteForm.formState.errors.nimi && (
-																<p className="text-red-500 text-xs mt-1">
-																	{ettevoteForm.formState.errors.nimi.message}
-																</p>
-															)}
-														</div>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...ettevoteForm.register('registrikood')}
-															/>
-															{ettevoteForm.formState.errors.registrikood && (
-																<p className="text-red-500 text-xs mt-1">
-																	{
-																		ettevoteForm.formState.errors.registrikood
-																			.message
-																	}
-																</p>
-															)}
-														</div>
-														<div>
-															<input
-																type="text"
-																className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-																{...ettevoteForm.register('osavotjateArv')}
-															/>
-															{ettevoteForm.formState.errors.osavotjateArv && (
-																<p className="text-red-500 text-xs mt-1">
-																	{
-																		ettevoteForm.formState.errors.osavotjateArv
-																			.message
-																	}
-																</p>
-															)}
-														</div>
-													</>
-												)}
-												<div>
-													<select
-														className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
-														{...(participantType === 'eraisik'
-															? eraisikForm.register('maksmiseViis')
-															: ettevoteForm.register('maksmiseViis'))}
-													>
-														<option value="">Vali maksmisviis</option>
-														<option value="pangaülekanne">Pangaülekanne</option>
-														<option value="sularaha">Sularaha</option>
-													</select>
-													{participantType === 'eraisik' &&
-														eraisikForm.formState.errors.maksmiseViis && (
-															<p className="text-red-500 text-xs mt-1">
-																{
-																	eraisikForm.formState.errors.maksmiseViis
-																		.message
-																}
-															</p>
-														)}
-													{participantType === 'ettevote' &&
-														ettevoteForm.formState.errors.maksmiseViis && (
-															<p className="text-red-500 text-xs mt-1">
-																{
-																	ettevoteForm.formState.errors.maksmiseViis
-																		.message
-																}
-															</p>
-														)}
+								{!isEventExpired && (
+									<form
+										onSubmit={
+											participantType === 'eraisik'
+												? eraisikForm.handleSubmit(onSubmitEraisik)
+												: ettevoteForm.handleSubmit(onSubmitEttevote)
+										}
+									>
+										<div className=" flex flex-col  ">
+											<h2 className="text-bermuda-500 text-2xl">
+												Osavõtjate lisamine
+											</h2>
+											<div className="flex ml-34 mt-8 gap-16">
+												<div className="flex gap-1 items-center">
+													<input
+														type="radio"
+														name="participantType"
+														value="eraisik"
+														id="eraisik"
+														checked={participantType === 'eraisik'}
+														onChange={(e) => {
+															setParticipantType(
+																e.target.value as 'eraisik' | 'ettevote'
+															);
+															// Reset forms when switching types
+															eraisikForm.reset();
+															ettevoteForm.reset();
+														}}
+													/>
+													<label htmlFor="eraisik">Eraisik</label>
 												</div>
-												<div>
-													<textarea
-														className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none"
-														{...(participantType === 'eraisik'
-															? eraisikForm.register('lisainfo')
-															: ettevoteForm.register('lisainfo'))}
-													></textarea>
+												<div className="flex gap-1 items-center">
+													<input
+														type="radio"
+														name="participantType"
+														value="ettevote"
+														id="ettevote"
+														checked={participantType === 'ettevote'}
+														onChange={(e) => {
+															setParticipantType(
+																e.target.value as 'eraisik' | 'ettevote'
+															);
+															// Reset forms when switching types
+															eraisikForm.reset();
+															ettevoteForm.reset();
+														}}
+													/>
+													<label htmlFor="ettevote">Ettevõte</label>
 												</div>
 											</div>
+											<div className="flex mt-2 ">
+												<div className="flex gap-4 w-34 flex-col">
+													{participantType === 'eraisik' ? (
+														<>
+															<p>Eesnimi:</p>
+															<p>Perenimi:</p>
+															<p>Isikukood:</p>
+															<p>Maksmisviis:</p>
+															<p>Lisainfo:</p>
+														</>
+													) : (
+														<>
+															<p>Nimi:</p>
+															<p>Registrikood:</p>
+															<p>Osavõtjate arv:</p>
+															<p>Maksmisviis:</p>
+															<p>Lisainfo:</p>
+														</>
+													)}
+												</div>
+												<div className=" flex flex-col gap-2 w-64">
+													{participantType === 'eraisik' ? (
+														<>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...eraisikForm.register('eesnimi')}
+																/>
+																{eraisikForm.formState.errors.eesnimi && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{
+																			eraisikForm.formState.errors.eesnimi
+																				.message
+																		}
+																	</p>
+																)}
+															</div>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...eraisikForm.register('perekonnanimi')}
+																/>
+																{eraisikForm.formState.errors.perekonnanimi && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{
+																			eraisikForm.formState.errors.perekonnanimi
+																				.message
+																		}
+																	</p>
+																)}
+															</div>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...eraisikForm.register('isikukood')}
+																/>
+																{eraisikForm.formState.errors.isikukood && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{
+																			eraisikForm.formState.errors.isikukood
+																				.message
+																		}
+																	</p>
+																)}
+															</div>
+														</>
+													) : (
+														<>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...ettevoteForm.register('nimi')}
+																/>
+																{ettevoteForm.formState.errors.nimi && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{ettevoteForm.formState.errors.nimi.message}
+																	</p>
+																)}
+															</div>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...ettevoteForm.register('registrikood')}
+																/>
+																{ettevoteForm.formState.errors.registrikood && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{
+																			ettevoteForm.formState.errors.registrikood
+																				.message
+																		}
+																	</p>
+																)}
+															</div>
+															<div>
+																<input
+																	type="text"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	{...ettevoteForm.register('osavotjateArv')}
+																/>
+																{ettevoteForm.formState.errors
+																	.osavotjateArv && (
+																	<p className="text-red-500 text-xs mt-1">
+																		{
+																			ettevoteForm.formState.errors
+																				.osavotjateArv.message
+																		}
+																	</p>
+																)}
+															</div>
+														</>
+													)}
+													<div>
+														<select
+															className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+															{...(participantType === 'eraisik'
+																? eraisikForm.register('maksmiseViis')
+																: ettevoteForm.register('maksmiseViis'))}
+														>
+															<option value="">Vali maksmisviis</option>
+															<option value="pangaülekanne">
+																Pangaülekanne
+															</option>
+															<option value="sularaha">Sularaha</option>
+														</select>
+														{participantType === 'eraisik' &&
+															eraisikForm.formState.errors.maksmiseViis && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		eraisikForm.formState.errors.maksmiseViis
+																			.message
+																	}
+																</p>
+															)}
+														{participantType === 'ettevote' &&
+															ettevoteForm.formState.errors.maksmiseViis && (
+																<p className="text-red-500 text-xs mt-1">
+																	{
+																		ettevoteForm.formState.errors.maksmiseViis
+																			.message
+																	}
+																</p>
+															)}
+													</div>
+													<div>
+														<textarea
+															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none"
+															{...(participantType === 'eraisik'
+																? eraisikForm.register('lisainfo')
+																: ettevoteForm.register('lisainfo'))}
+														></textarea>
+													</div>
+												</div>
+											</div>
+											<div className="flex mt-8 gap-2">
+												<button
+													type="button"
+													onClick={() => navigate('/')}
+													className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "
+												>
+													Tagasi
+												</button>
+												<button
+													type="submit"
+													disabled={isSubmitting}
+													className="bg-bermuda-500 hover:bg-bermuda-600 duration-100 cursor-pointer py-[2px] text-sm  text-white rounded-xs w-15 disabled:opacity-50"
+												>
+													{isSubmitting ? 'Salvestab...' : 'Salvesta'}
+												</button>
+											</div>
 										</div>
-										<div className="flex mt-8 gap-2">
-											<button
-												type="button"
-												onClick={() => navigate('/')}
-												className="bg-zinc-300 w-15 flex items-center justify-center hover:bg-zinc-400 text-zinc-800 duration-100 cursor-pointer py-[2px] text-sm  font-semibold rounded-xs "
-											>
-												Tagasi
-											</button>
-											<button
-												type="submit"
-												disabled={isSubmitting}
-												className="bg-bermuda-500 hover:bg-bermuda-600 duration-100 cursor-pointer py-[2px] text-sm  text-white rounded-xs w-15 disabled:opacity-50"
-											>
-												{isSubmitting ? 'Salvestab...' : 'Salvesta'}
-											</button>
-										</div>
-									</div>
-								</form>
+									</form>
+								)}
 							</div>
 						</div>
 					</div>
