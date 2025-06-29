@@ -27,7 +27,7 @@ function Avaleht() {
 									<strong>viverra, lobortis lorem non</strong>, accumsan metus.
 								</span>
 							</div>
-							<div className="basis-1/2 h-full bg-yellow-300 transform ">
+							<div className="basis-1/2 h-full min-h-[272px]   ">
 								<img
 									src="/pilt.jpg"
 									className="object-cover w-full h-full"

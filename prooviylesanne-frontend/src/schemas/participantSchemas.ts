@@ -111,7 +111,7 @@ export const ettevoteSchema = z.object({
 	nimi: z.string().min(1, 'Nimi on kohustuslik'),
 	registrikood: z
 		.string()
-		.min(8, 'Registrikood on kohustuslik')
+		.min(8, 'Registrikood peab olema täpselt 8 märki')
 		.max(8, 'Registrikood peab olema täpselt 8 märki'),
 	osavotjateArv: z.string().min(1, 'Osavõtjate arv on kohustuslik'),
 	maksmiseViis: z.string().min(1, 'Maksmisviis on kohustuslik'),

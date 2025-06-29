@@ -232,27 +232,29 @@ const Osavotjad = () => {
 																	. {isik.nimi}
 																</p>
 																<p className="w-44">{isik.registrikood}</p>
-																<div className="  flex items-center gap-8">
-																	<button
-																		className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
-																		onClick={() =>
-																			navigate(
-																				`/osavotjad/juriidiline/${isik.id}`,
-																				{ state: { from: location.pathname } }
-																			)
-																		}
-																	>
-																		Vaata
-																	</button>
-																	<button
-																		className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
-																		onClick={() =>
-																			handleDeleteJuriidilineIsik(isik.id)
-																		}
-																	>
-																		Kustuta
-																	</button>
-																</div>
+																{!isEventExpired && (
+																	<div className="  flex items-center gap-8">
+																		<button
+																			className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																			onClick={() =>
+																				navigate(
+																					`/osavotjad/juriidiline/${isik.id}`,
+																					{ state: { from: location.pathname } }
+																				)
+																			}
+																		>
+																			Vaata
+																		</button>
+																		<button
+																			className="text-xs font-bold text-zinc-500 uppercase cursor-pointer"
+																			onClick={() =>
+																				handleDeleteJuriidilineIsik(isik.id)
+																			}
+																		>
+																			Kustuta
+																		</button>
+																	</div>
+																)}
 															</div>
 														)
 													)}
