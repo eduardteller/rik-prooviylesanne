@@ -34,6 +34,7 @@ public class IsikudController {
         private String maksmiseViis;
         private String lisainfo;
         private Long yritusId;
+        private Long isikId;
     }
 
     @Setter
@@ -45,6 +46,7 @@ public class IsikudController {
         private String maksmiseViis;
         private String lisainfo;
         private Long yritusId;
+        private Long isikId;
     }
 
     @Setter
@@ -72,20 +74,31 @@ public class IsikudController {
     @PostMapping("/add-fyysiline-isik")
     public ResponseEntity<?> addFyysilineIsik(@RequestBody FyysilineIsikRequest request) {
         try {
-            FyysilisedIsikud isik = new FyysilisedIsikud();
-            isik.setEesnimi(request.getEesnimi());
-            isik.setPerekonnanimi(request.getPerekonnanimi());
-            isik.setIsikukood(request.getIsikukood());
-            isik.setLisainfo(request.getLisainfo());
+            FyysilisedIsikud savedIsik;
 
-            // Let the service handle finding the payment method
-            FyysilisedIsikud savedIsik = isikudService.addFyysilineIsikToYritus(
-                    isik,
-                    request.getYritusId(),
-                    request.getMaksmiseViis()
-            );
+            if (request.getIsikId() != null) {
+                savedIsik = isikudService.addExistingFyysilineIsikToYritus(
+                        request.getIsikId(),
+                        request.getYritusId()
+                );
+            } else {
+                FyysilisedIsikud isik = new FyysilisedIsikud();
+                isik.setEesnimi(request.getEesnimi());
+                isik.setPerekonnanimi(request.getPerekonnanimi());
+                isik.setIsikukood(request.getIsikukood());
+                isik.setLisainfo(request.getLisainfo());
+
+                savedIsik = isikudService.addFyysilineIsikToYritus(
+                        isik,
+                        request.getYritusId(),
+                        request.getMaksmiseViis()
+                );
+            }
 
             return ResponseEntity.ok(savedIsik);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to add physical person: " + e.getMessage());
@@ -95,20 +108,31 @@ public class IsikudController {
     @PostMapping("/add-juriidiline-isik")
     public ResponseEntity<?> addJuriidilineIsik(@RequestBody JuriidilineIsikRequest request) {
         try {
-            JuriidilisedIsikud isik = new JuriidilisedIsikud();
-            isik.setNimi(request.getNimi());
-            isik.setRegistrikood(request.getRegistrikood());
-            isik.setOsavotjateArv(request.getOsavotjateArv());
-            isik.setLisainfo(request.getLisainfo());
+            JuriidilisedIsikud savedIsik;
 
-            // Let the service handle finding the payment method
-            JuriidilisedIsikud savedIsik = isikudService.addJuriidilineIsikToYritus(
-                    isik,
-                    request.getYritusId(),
-                    request.getMaksmiseViis()
-            );
+            if (request.getIsikId() != null) {
+                savedIsik = isikudService.addExistingJuriidilineIsikToYritus(
+                        request.getIsikId(),
+                        request.getYritusId()
+                );
+            } else {
+                JuriidilisedIsikud isik = new JuriidilisedIsikud();
+                isik.setNimi(request.getNimi());
+                isik.setRegistrikood(request.getRegistrikood());
+                isik.setOsavotjateArv(request.getOsavotjateArv());
+                isik.setLisainfo(request.getLisainfo());
+
+                savedIsik = isikudService.addJuriidilineIsikToYritus(
+                        isik,
+                        request.getYritusId(),
+                        request.getMaksmiseViis()
+                );
+            }
 
             return ResponseEntity.ok(savedIsik);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to add legal entity: " + e.getMessage());
@@ -229,6 +253,17 @@ public class IsikudController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to retrieve legal entity: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-saadavad-isikud")
+    public ResponseEntity<?> getSaadavadIsikudByYritusId(@RequestParam Long yritusId) {
+        try {
+            Map<String, Object> saadavadIsikud = isikudService.getAvailableIsikudForYritus(yritusId);
+            return ResponseEntity.ok(saadavadIsikud);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve available people for event: " + e.getMessage());
         }
     }
 }

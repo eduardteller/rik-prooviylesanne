@@ -43,8 +43,22 @@ public class IsikudService {
         this.maksmiseViisidRepository = maksmiseViisidRepository;
     }
 
+    public boolean fyysilineIsikExists(FyysilisedIsikud isik) {
+        return fyysilisedIsikudRepository.existsByIsikukood(
+                isik.getIsikukood());
+    }
+
+    public boolean juriidilineIsikExists(JuriidilisedIsikud isik) {
+        return juriidilisedIsikudRepository.existsByRegistrikood(
+                isik.getRegistrikood());
+    }
+
     @Transactional
     public FyysilisedIsikud addFyysilineIsikToYritus(FyysilisedIsikud isik, Long yritusId, String maksmiseViisString) {
+        if (fyysilineIsikExists(isik)) {
+            throw new IllegalArgumentException("Duplicate person: A physical person with the same properties already exists");
+        }
+
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
@@ -67,6 +81,10 @@ public class IsikudService {
 
     @Transactional
     public JuriidilisedIsikud addJuriidilineIsikToYritus(JuriidilisedIsikud isik, Long yritusId, String maksmiseViisString) {
+        if (juriidilineIsikExists(isik)) {
+            throw new IllegalArgumentException("Duplicate entity: A legal entity with the same properties already exists");
+        }
+
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
@@ -146,6 +164,45 @@ public class IsikudService {
         return result;
     }
 
+    /**
+     * Gets all persons (both physical and legal) that are available to be added to an event
+     * (persons that are not already associated with this event)
+     */
+    public Map<String, Object> getAvailableIsikudForYritus(Long yritusId) {
+        Yritused yritus = yritusedRepository.findById(yritusId)
+                .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
+
+        List<YritusedIsikud> yritusedIsikud = yritusedIsikudRepository.findByYritus(yritus);
+
+        List<Long> existingFyysilisedIsikudIds = yritusedIsikud.stream()
+                .filter(yi -> yi.getFyysilineIsikId() != null)
+                .map(yi -> yi.getFyysilineIsikId().getId())
+                .toList();
+
+        List<Long> existingJuriidilisedIsikudIds = yritusedIsikud.stream()
+                .filter(yi -> yi.getJuriidilineIsikId() != null)
+                .map(yi -> yi.getJuriidilineIsikId().getId())
+                .toList();
+
+        List<FyysilisedIsikud> allFyysilisedIsikud = fyysilisedIsikudRepository.findAll();
+
+        List<JuriidilisedIsikud> allJuriidilisedIsikud = juriidilisedIsikudRepository.findAll();
+
+        List<FyysilisedIsikud> availableFyysilisedIsikud = allFyysilisedIsikud.stream()
+                .filter(isik -> !existingFyysilisedIsikudIds.contains(isik.getId()))
+                .toList();
+
+        List<JuriidilisedIsikud> availableJuriidilisedIsikud = allJuriidilisedIsikud.stream()
+                .filter(isik -> !existingJuriidilisedIsikudIds.contains(isik.getId()))
+                .toList();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("fyysilisedIsikud", availableFyysilisedIsikud);
+        result.put("juriidilisedIsikud", availableJuriidilisedIsikud);
+
+        return result;
+    }
+
     @Transactional
     public FyysilisedIsikud updateFyysilineIsik(Long id, FyysilisedIsikud updatedIsik, String maksmiseViisString) {
         Optional<FyysilisedIsikud> isikOpt = fyysilisedIsikudRepository.findById(id);
@@ -200,5 +257,53 @@ public class IsikudService {
     public JuriidilisedIsikud getJuriidilineIsikById(Long id) {
         return juriidilisedIsikudRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Legal entity with ID " + id + " not found"));
+    }
+
+    @Transactional
+    public FyysilisedIsikud addExistingFyysilineIsikToYritus(Long isikId, Long yritusId) {
+        FyysilisedIsikud existingIsik = fyysilisedIsikudRepository.findById(isikId)
+                .orElseThrow(() -> new RuntimeException("Physical person with ID " + isikId + " not found"));
+
+        Yritused yritus = yritusedRepository.findById(yritusId)
+                .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
+
+        boolean alreadyAdded = yritusedIsikudRepository.findByYritus(yritus).stream()
+                .anyMatch(yi -> yi.getFyysilineIsikId() != null &&
+                        yi.getFyysilineIsikId().getId().equals(existingIsik.getId()));
+
+        if (alreadyAdded) {
+            throw new IllegalArgumentException("This physical person is already added to this event");
+        }
+
+        YritusedIsikud yritusedIsik = new YritusedIsikud();
+        yritusedIsik.setYritus(yritus);
+        yritusedIsik.setFyysilineIsikId(existingIsik);
+        yritusedIsikudRepository.save(yritusedIsik);
+
+        return existingIsik;
+    }
+
+    @Transactional
+    public JuriidilisedIsikud addExistingJuriidilineIsikToYritus(Long isikId, Long yritusId) {
+        JuriidilisedIsikud existingIsik = juriidilisedIsikudRepository.findById(isikId)
+                .orElseThrow(() -> new RuntimeException("Legal entity with ID " + isikId + " not found"));
+
+        Yritused yritus = yritusedRepository.findById(yritusId)
+                .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
+
+        boolean alreadyAdded = yritusedIsikudRepository.findByYritus(yritus).stream()
+                .anyMatch(yi -> yi.getJuriidilineIsikId() != null &&
+                        yi.getJuriidilineIsikId().getId().equals(existingIsik.getId()));
+
+        if (alreadyAdded) {
+            throw new IllegalArgumentException("This legal entity is already added to this event");
+        }
+
+        YritusedIsikud yritusedIsik = new YritusedIsikud();
+        yritusedIsik.setYritus(yritus);
+        yritusedIsik.setJuriidilineIsikId(existingIsik);
+        yritusedIsikudRepository.save(yritusedIsik);
+
+        return existingIsik;
     }
 }

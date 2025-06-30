@@ -35,6 +35,7 @@ export interface EraisikRequest {
 	maksmiseViis: string;
 	lisainfo?: string;
 	yritusId?: string;
+	isikId?: number;
 }
 
 export interface EttevoteRequest {
@@ -44,6 +45,7 @@ export interface EttevoteRequest {
 	maksmiseViis: string;
 	lisainfo?: string;
 	yritusId?: string;
+	isikId?: number;
 }
 
 export interface FyysilineIsikUpdateRequest {
@@ -107,6 +109,20 @@ const fetchParticipants = async (
 
 	if (!response.ok) {
 		throw new Error('Failed to fetch participants');
+	}
+
+	return response.json();
+};
+
+const fetchAvailableParticipants = async (
+	yritusId: string
+): Promise<ParticipantsResponse> => {
+	const response = await fetch(
+		`http://localhost:8080/api/isikud/get-saadavad-isikud?yritusId=${yritusId}`
+	);
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch available participants');
 	}
 
 	return response.json();
@@ -213,6 +229,9 @@ export const useAddEraisik = () => {
 				queryClient.invalidateQueries({
 					queryKey: ['event', variables.yritusId],
 				});
+				queryClient.invalidateQueries({
+					queryKey: ['available-participants', variables.yritusId],
+				});
 			}
 		},
 	});
@@ -231,6 +250,9 @@ export const useAddEttevote = () => {
 				queryClient.invalidateQueries({
 					queryKey: ['event', variables.yritusId],
 				});
+				queryClient.invalidateQueries({
+					queryKey: ['available-participants', variables.yritusId],
+				});
 			}
 		},
 	});
@@ -240,6 +262,16 @@ export const useParticipants = (yritusId: string) => {
 	return useQuery({
 		queryKey: ['participants', yritusId],
 		queryFn: () => fetchParticipants(yritusId),
+		enabled: !!yritusId, // Only run query if yritusId is provided
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+export const useAvailableParticipants = (yritusId: string) => {
+	return useQuery({
+		queryKey: ['available-participants', yritusId],
+		queryFn: () => fetchAvailableParticipants(yritusId),
 		enabled: !!yritusId, // Only run query if yritusId is provided
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 10 * 60 * 1000, // 10 minutes

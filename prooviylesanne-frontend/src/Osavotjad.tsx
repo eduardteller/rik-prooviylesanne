@@ -6,9 +6,12 @@ import { formatDate, useEvent } from './api/events';
 import {
 	useAddEraisik,
 	useAddEttevote,
+	useAvailableParticipants,
 	useDeleteFyysilineIsik,
 	useDeleteJuriidilineIsik,
 	useParticipants,
+	type FyysilineIsik,
+	type JuriidilineIsik,
 } from './api/participants';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -19,6 +22,10 @@ import {
 	type EttevoteFormData,
 } from './schemas/participantSchemas';
 
+type AvailableParticipant =
+	| (FyysilineIsik & { type: 'fyysiline' })
+	| (JuriidilineIsik & { type: 'juriidiline' });
+
 const Osavotjad = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
@@ -26,6 +33,26 @@ const Osavotjad = () => {
 	const [participantType, setParticipantType] = useState<
 		'eraisik' | 'ettevote'
 	>('eraisik');
+	const [selectedExistingParticipant, setSelectedExistingParticipant] =
+		useState<AvailableParticipant | null>(null);
+
+	const getAllAvailableParticipants = (): AvailableParticipant[] => {
+		if (!availableParticipants) return [];
+
+		const fyysilised: AvailableParticipant[] =
+			availableParticipants.fyysilisedIsikud.map((p) => ({
+				...p,
+				type: 'fyysiline' as const,
+			}));
+
+		const juriidilised: AvailableParticipant[] =
+			availableParticipants.juriidilisedIsikud.map((p) => ({
+				...p,
+				type: 'juriidiline' as const,
+			}));
+
+		return [...fyysilised, ...juriidilised];
+	};
 
 	const {
 		data: event,
@@ -38,6 +65,12 @@ const Osavotjad = () => {
 		isLoading: participantsLoading,
 		error: participantsError,
 	} = useParticipants(id || '');
+
+	const {
+		data: availableParticipants,
+		isLoading: availableParticipantsLoading,
+		error: availableParticipantsError,
+	} = useAvailableParticipants(id || '');
 
 	const addEraisikMutation = useAddEraisik();
 	const addEttevoteMutation = useAddEttevote();
@@ -67,10 +100,27 @@ const Osavotjad = () => {
 	});
 
 	const onSubmitEraisik = (data: EraisikFormData) => {
-		const submitData = { ...data, yritusId: id };
+		console.log('NICK', selectedExistingParticipant);
+
+		const submitData =
+			selectedExistingParticipant &&
+			selectedExistingParticipant.type === 'fyysiline'
+				? {
+						...data,
+						yritusId: id,
+						isikId: selectedExistingParticipant.id,
+						eesnimi: selectedExistingParticipant.eesnimi,
+						perekonnanimi: selectedExistingParticipant.perekonnanimi,
+						isikukood: selectedExistingParticipant.isikukood,
+						maksmiseViis: selectedExistingParticipant.maksmiseViis.maksmiseViis,
+						lisainfo: selectedExistingParticipant.lisainfo || '',
+				  }
+				: { ...data, yritusId: id };
+
 		addEraisikMutation.mutate(submitData, {
 			onSuccess: () => {
 				eraisikForm.reset();
+				setSelectedExistingParticipant(null);
 				alert('Eraisik lisatud edukalt!');
 				navigate(`/`);
 			},
@@ -82,10 +132,25 @@ const Osavotjad = () => {
 	};
 
 	const onSubmitEttevote = (data: EttevoteFormData) => {
-		const submitData = { ...data, yritusId: id };
+		const submitData =
+			selectedExistingParticipant &&
+			selectedExistingParticipant.type === 'juriidiline'
+				? {
+						...data,
+						yritusId: id,
+						isikId: selectedExistingParticipant.id,
+						nimi: selectedExistingParticipant.nimi,
+						registrikood: selectedExistingParticipant.registrikood,
+						osavotjateArv: selectedExistingParticipant.osavotjateArv,
+						maksmiseViis: selectedExistingParticipant.maksmiseViis.maksmiseViis,
+						lisainfo: selectedExistingParticipant.lisainfo || '',
+				  }
+				: { ...data, yritusId: id };
+
 		addEttevoteMutation.mutate(submitData, {
 			onSuccess: () => {
 				ettevoteForm.reset();
+				setSelectedExistingParticipant(null);
 				alert('Ettevõte lisatud edukalt!');
 				navigate(`/`);
 			},
@@ -275,16 +340,87 @@ const Osavotjad = () => {
 								</div>
 								{!isEventExpired && (
 									<form
-										onSubmit={
-											participantType === 'eraisik'
-												? eraisikForm.handleSubmit(onSubmitEraisik)
-												: ettevoteForm.handleSubmit(onSubmitEttevote)
-										}
+										onSubmit={(e) => {
+											e.preventDefault();
+											if (selectedExistingParticipant) {
+												if (participantType === 'eraisik') {
+													onSubmitEraisik({} as EraisikFormData);
+												} else {
+													onSubmitEttevote({} as EttevoteFormData);
+												}
+											} else {
+												if (participantType === 'eraisik') {
+													eraisikForm.handleSubmit(onSubmitEraisik)();
+												} else {
+													ettevoteForm.handleSubmit(onSubmitEttevote)();
+												}
+											}
+										}}
 									>
 										<div className=" flex flex-col  ">
 											<h2 className="text-bermuda-500 text-2xl">
 												Osavõtjate lisamine
 											</h2>
+
+											<div className="mt-4">
+												<label
+													htmlFor="existingParticipant"
+													className="block text-sm font-medium text-gray-700 mb-2"
+												>
+													Vali olemasolev osavõtja:
+												</label>
+												<select
+													id="existingParticipant"
+													className="border w-64 border-gray-500 rounded-sm px-2 py-[2px]"
+													value={selectedExistingParticipant?.id || ''}
+													onChange={(e) => {
+														const participantId = e.target.value;
+														if (participantId === '') {
+															setSelectedExistingParticipant(null);
+														} else if (availableParticipants) {
+															const allParticipants =
+																getAllAvailableParticipants();
+															const participant = allParticipants.find(
+																(p) => p.id.toString() === participantId
+															);
+															if (participant) {
+																setSelectedExistingParticipant(participant);
+																setParticipantType(
+																	participant.type === 'fyysiline'
+																		? 'eraisik'
+																		: 'ettevote'
+																);
+																eraisikForm.clearErrors();
+																ettevoteForm.clearErrors();
+															}
+														}
+													}}
+												>
+													<option value="">Vali osavõtja või lisa uus</option>
+													{availableParticipantsLoading && (
+														<option disabled>Laeb...</option>
+													)}
+													{availableParticipantsError && (
+														<option disabled>Viga andmete laadimisel</option>
+													)}
+													{getAllAvailableParticipants().map((participant) => (
+														<option
+															key={participant.id + participant.type}
+															value={participant.id}
+														>
+															{participant.type === 'fyysiline'
+																? `${participant.eesnimi} ${participant.perekonnanimi}`
+																: participant.nimi}{' '}
+															(
+															{participant.type === 'fyysiline'
+																? 'Eraisik'
+																: 'Ettevõte'}
+															)
+														</option>
+													))}
+												</select>
+											</div>
+
 											<div className="flex ml-34 mt-8 gap-16">
 												<div className="flex gap-1 items-center">
 													<input
@@ -293,11 +429,11 @@ const Osavotjad = () => {
 														value="eraisik"
 														id="eraisik"
 														checked={participantType === 'eraisik'}
+														disabled={!!selectedExistingParticipant}
 														onChange={(e) => {
 															setParticipantType(
 																e.target.value as 'eraisik' | 'ettevote'
 															);
-															// Reset forms when switching types
 															eraisikForm.reset();
 															ettevoteForm.reset();
 														}}
@@ -311,11 +447,11 @@ const Osavotjad = () => {
 														value="ettevote"
 														id="ettevote"
 														checked={participantType === 'ettevote'}
+														disabled={!!selectedExistingParticipant}
 														onChange={(e) => {
 															setParticipantType(
 																e.target.value as 'eraisik' | 'ettevote'
 															);
-															// Reset forms when switching types
 															eraisikForm.reset();
 															ettevoteForm.reset();
 														}}
@@ -349,47 +485,53 @@ const Osavotjad = () => {
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...eraisikForm.register('eesnimi')}
 																/>
-																{eraisikForm.formState.errors.eesnimi && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{
-																			eraisikForm.formState.errors.eesnimi
-																				.message
-																		}
-																	</p>
-																)}
+																{eraisikForm.formState.errors.eesnimi &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				eraisikForm.formState.errors.eesnimi
+																					.message
+																			}
+																		</p>
+																	)}
 															</div>
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...eraisikForm.register('perekonnanimi')}
 																/>
-																{eraisikForm.formState.errors.perekonnanimi && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{
-																			eraisikForm.formState.errors.perekonnanimi
-																				.message
-																		}
-																	</p>
-																)}
+																{eraisikForm.formState.errors.perekonnanimi &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				eraisikForm.formState.errors
+																					.perekonnanimi.message
+																			}
+																		</p>
+																	)}
 															</div>
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...eraisikForm.register('isikukood')}
 																/>
-																{eraisikForm.formState.errors.isikukood && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{
-																			eraisikForm.formState.errors.isikukood
-																				.message
-																		}
-																	</p>
-																)}
+																{eraisikForm.formState.errors.isikukood &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				eraisikForm.formState.errors.isikukood
+																					.message
+																			}
+																		</p>
+																	)}
 															</div>
 														</>
 													) : (
@@ -397,51 +539,60 @@ const Osavotjad = () => {
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...ettevoteForm.register('nimi')}
 																/>
-																{ettevoteForm.formState.errors.nimi && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{ettevoteForm.formState.errors.nimi.message}
-																	</p>
-																)}
+																{ettevoteForm.formState.errors.nimi &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				ettevoteForm.formState.errors.nimi
+																					.message
+																			}
+																		</p>
+																	)}
 															</div>
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...ettevoteForm.register('registrikood')}
 																/>
-																{ettevoteForm.formState.errors.registrikood && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{
-																			ettevoteForm.formState.errors.registrikood
-																				.message
-																		}
-																	</p>
-																)}
+																{ettevoteForm.formState.errors.registrikood &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				ettevoteForm.formState.errors
+																					.registrikood.message
+																			}
+																		</p>
+																	)}
 															</div>
 															<div>
 																<input
 																	type="text"
-																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+																	className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+																	disabled={!!selectedExistingParticipant}
 																	{...ettevoteForm.register('osavotjateArv')}
 																/>
-																{ettevoteForm.formState.errors
-																	.osavotjateArv && (
-																	<p className="text-red-500 text-xs mt-1">
-																		{
-																			ettevoteForm.formState.errors
-																				.osavotjateArv.message
-																		}
-																	</p>
-																)}
+																{ettevoteForm.formState.errors.osavotjateArv &&
+																	!selectedExistingParticipant && (
+																		<p className="text-red-500 text-xs mt-1">
+																			{
+																				ettevoteForm.formState.errors
+																					.osavotjateArv.message
+																			}
+																		</p>
+																	)}
 															</div>
 														</>
 													)}
 													<div>
 														<select
-															className="border w-full border-gray-500 rounded-sm px-2 py-[2px]"
+															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
+															disabled={!!selectedExistingParticipant}
 															{...(participantType === 'eraisik'
 																? eraisikForm.register('maksmiseViis')
 																: ettevoteForm.register('maksmiseViis'))}
@@ -453,7 +604,8 @@ const Osavotjad = () => {
 															<option value="sularaha">Sularaha</option>
 														</select>
 														{participantType === 'eraisik' &&
-															eraisikForm.formState.errors.maksmiseViis && (
+															eraisikForm.formState.errors.maksmiseViis &&
+															!selectedExistingParticipant && (
 																<p className="text-red-500 text-xs mt-1">
 																	{
 																		eraisikForm.formState.errors.maksmiseViis
@@ -462,7 +614,8 @@ const Osavotjad = () => {
 																</p>
 															)}
 														{participantType === 'ettevote' &&
-															ettevoteForm.formState.errors.maksmiseViis && (
+															ettevoteForm.formState.errors.maksmiseViis &&
+															!selectedExistingParticipant && (
 																<p className="text-red-500 text-xs mt-1">
 																	{
 																		ettevoteForm.formState.errors.maksmiseViis
@@ -473,7 +626,8 @@ const Osavotjad = () => {
 													</div>
 													<div>
 														<textarea
-															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none"
+															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+															disabled={!!selectedExistingParticipant}
 															{...(participantType === 'eraisik'
 																? eraisikForm.register('lisainfo')
 																: ettevoteForm.register('lisainfo'))}
