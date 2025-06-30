@@ -335,7 +335,7 @@ public class IsikudServiceTests {
     }
 
     @Test
-    void getJuriidilineIsikById_ShouldReturnIsikWhenFound() {
+    void getJuriidilineIsikById_ShouldReturnJuriidilineIsik() {
         // Setup
         when(juriidilisedIsikudRepository.findById(1L)).thenReturn(Optional.of(testJuriidilineIsik));
 
@@ -344,24 +344,147 @@ public class IsikudServiceTests {
 
         // Verify
         assertNotNull(result);
-        assertEquals(1L, result.getId());
-        assertEquals("Test Company", result.getNimi());
-        assertEquals("12345678", result.getRegistrikood());
-        assertEquals("5", result.getOsavotjateArv());
+        assertEquals(testJuriidilineIsik.getId(), result.getId());
+        assertEquals(testJuriidilineIsik.getNimi(), result.getNimi());
+        assertEquals(testJuriidilineIsik.getRegistrikood(), result.getRegistrikood());
+        assertEquals(testJuriidilineIsik.getOsavotjateArv(), result.getOsavotjateArv());
+        assertEquals(testJuriidilineIsik.getLisainfo(), result.getLisainfo());
+        assertEquals(testJuriidilineIsik.getMaksmiseViis().getMaksmiseViis(), result.getMaksmiseViis().getMaksmiseViis());
 
         verify(juriidilisedIsikudRepository, times(1)).findById(1L);
     }
 
     @Test
-    void getJuriidilineIsikById_ShouldThrowExceptionWhenNotFound() {
+    void getJuriidilineIsikById_ShouldThrowException_WhenJuriidilineIsikNotFound() {
         // Setup
         when(juriidilisedIsikudRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Test & Verify
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> isikudService.getJuriidilineIsikById(999L));
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            isikudService.getJuriidilineIsikById(999L);
+        });
 
-        assertEquals("Legal entity with ID 999 not found", exception.getMessage());
+        assertEquals("Legal entity with ID 999 not found", thrown.getMessage());
         verify(juriidilisedIsikudRepository, times(1)).findById(999L);
+    }
+
+    @Test
+    void getAllIsikudForYritus_ShouldReturnBothIsikudLists() {
+        // Setup
+        YritusedIsikud fyysilineYritusIsik = new YritusedIsikud();
+        fyysilineYritusIsik.setYritus(testYritus);
+        fyysilineYritusIsik.setFyysilineIsikId(testFyysilineIsik);
+
+        YritusedIsikud juriidilineYritusIsik = new YritusedIsikud();
+        juriidilineYritusIsik.setYritus(testYritus);
+        juriidilineYritusIsik.setJuriidilineIsikId(testJuriidilineIsik);
+
+        List<YritusedIsikud> yritusedIsikud = List.of(fyysilineYritusIsik, juriidilineYritusIsik);
+
+        when(yritusedRepository.findById(1L)).thenReturn(Optional.of(testYritus));
+        when(yritusedIsikudRepository.findByYritus(testYritus)).thenReturn(yritusedIsikud);
+
+        // Test
+        Map<String, Object> result = isikudService.getAllIsikudForYritus(1L);
+
+        // Verify
+        assertNotNull(result);
+        assertTrue(result.containsKey("fyysilisedIsikud"));
+        assertTrue(result.containsKey("juriidilisedIsikud"));
+
+        List<FyysilisedIsikud> resultFyysilised = (List<FyysilisedIsikud>) result.get("fyysilisedIsikud");
+        List<JuriidilisedIsikud> resultJuriidilised = (List<JuriidilisedIsikud>) result.get("juriidilisedIsikud");
+
+        assertEquals(1, resultFyysilised.size());
+        assertEquals(1, resultJuriidilised.size());
+
+        assertEquals(testFyysilineIsik.getId(), resultFyysilised.get(0).getId());
+        assertEquals(testJuriidilineIsik.getId(), resultJuriidilised.get(0).getId());
+
+        verify(yritusedRepository, times(1)).findById(1L);
+        verify(yritusedIsikudRepository, times(1)).findByYritus(testYritus);
+    }
+
+    @Test
+    void getAllIsikudForYritus_ShouldThrowException_WhenYritusNotFound() {
+        // Setup
+        when(yritusedRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Test & Verify
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            isikudService.getAllIsikudForYritus(999L);
+        });
+
+        assertEquals("Event with ID 999 not found", thrown.getMessage());
+        verify(yritusedRepository, times(1)).findById(999L);
+    }
+
+    @Test
+    void getAvailableIsikudForYritus_ShouldReturnAvailableIsikud() {
+        // Setup
+        YritusedIsikud existingFyysilineYritusIsik = new YritusedIsikud();
+        existingFyysilineYritusIsik.setYritus(testYritus);
+        existingFyysilineYritusIsik.setFyysilineIsikId(testFyysilineIsik);
+
+        YritusedIsikud existingJuriidilineYritusIsik = new YritusedIsikud();
+        existingJuriidilineYritusIsik.setYritus(testYritus);
+        existingJuriidilineYritusIsik.setJuriidilineIsikId(testJuriidilineIsik);
+
+        List<YritusedIsikud> existingYritusedIsikud = List.of(existingFyysilineYritusIsik, existingJuriidilineYritusIsik);
+
+        FyysilisedIsikud availableFyysilineIsik = new FyysilisedIsikud();
+        availableFyysilineIsik.setId(2L);
+        availableFyysilineIsik.setEesnimi("Jane");
+        availableFyysilineIsik.setPerekonnanimi("Smith");
+
+        JuriidilisedIsikud availableJuriidilineIsik = new JuriidilisedIsikud();
+        availableJuriidilineIsik.setId(2L);
+        availableJuriidilineIsik.setNimi("Another Company");
+
+        List<FyysilisedIsikud> allFyysilisedIsikud = List.of(testFyysilineIsik, availableFyysilineIsik);
+        List<JuriidilisedIsikud> allJuriidilisedIsikud = List.of(testJuriidilineIsik, availableJuriidilineIsik);
+
+        when(yritusedRepository.findById(1L)).thenReturn(Optional.of(testYritus));
+        when(yritusedIsikudRepository.findByYritus(testYritus)).thenReturn(existingYritusedIsikud);
+        when(fyysilisedIsikudRepository.findAll()).thenReturn(allFyysilisedIsikud);
+        when(juriidilisedIsikudRepository.findAll()).thenReturn(allJuriidilisedIsikud);
+
+        // Test
+        Map<String, Object> result = isikudService.getAvailableIsikudForYritus(1L);
+
+        // Verify
+        assertNotNull(result);
+        assertTrue(result.containsKey("fyysilisedIsikud"));
+        assertTrue(result.containsKey("juriidilisedIsikud"));
+
+        List<FyysilisedIsikud> resultFyysilised = (List<FyysilisedIsikud>) result.get("fyysilisedIsikud");
+        List<JuriidilisedIsikud> resultJuriidilised = (List<JuriidilisedIsikud>) result.get("juriidilisedIsikud");
+
+        assertEquals(1, resultFyysilised.size());
+        assertEquals(1, resultJuriidilised.size());
+
+        assertEquals(availableFyysilineIsik.getId(), resultFyysilised.get(0).getId());
+        assertEquals(availableFyysilineIsik.getEesnimi(), resultFyysilised.get(0).getEesnimi());
+        assertEquals(availableJuriidilineIsik.getId(), resultJuriidilised.get(0).getId());
+        assertEquals(availableJuriidilineIsik.getNimi(), resultJuriidilised.get(0).getNimi());
+
+        verify(yritusedRepository, times(1)).findById(1L);
+        verify(yritusedIsikudRepository, times(1)).findByYritus(testYritus);
+        verify(fyysilisedIsikudRepository, times(1)).findAll();
+        verify(juriidilisedIsikudRepository, times(1)).findAll();
+    }
+
+    @Test
+    void getAvailableIsikudForYritus_ShouldThrowException_WhenYritusNotFound() {
+        // Setup
+        when(yritusedRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Test & Verify
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            isikudService.getAvailableIsikudForYritus(999L);
+        });
+
+        assertEquals("Event with ID 999 not found", thrown.getMessage());
+        verify(yritusedRepository, times(1)).findById(999L);
     }
 }

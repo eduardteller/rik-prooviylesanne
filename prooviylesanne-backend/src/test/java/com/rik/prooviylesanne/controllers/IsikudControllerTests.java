@@ -308,7 +308,7 @@ public class IsikudControllerTests {
     }
 
     @Test
-    void getJuriidilineIsikById_ShouldReturnErrorWhenNotFound() throws Exception {
+    void getJuriidilineIsikById_ShouldReturnError_WhenIsikNotFound() throws Exception {
         when(isikudService.getJuriidilineIsikById(999L))
                 .thenThrow(new RuntimeException("Legal entity with ID 999 not found"));
 
@@ -317,5 +317,49 @@ public class IsikudControllerTests {
                 .andExpect(content().string(containsString("Failed to retrieve legal entity")));
 
         verify(isikudService, times(1)).getJuriidilineIsikById(999L);
+    }
+
+    @Test
+    void getSaadavadIsikudByYritusId_ShouldReturnAvailableIsikud() throws Exception {
+        Map<String, Object> availableIsikudMap = new HashMap<>();
+
+        List<FyysilisedIsikud> availableFyysilisedIsikud = new ArrayList<>();
+        FyysilisedIsikud availableFyysilineIsik = new FyysilisedIsikud();
+        availableFyysilineIsik.setId(2L);
+        availableFyysilineIsik.setEesnimi("Jane");
+        availableFyysilineIsik.setPerekonnanimi("Smith");
+        availableFyysilisedIsikud.add(availableFyysilineIsik);
+
+        List<JuriidilisedIsikud> availableJuriidilisedIsikud = new ArrayList<>();
+        JuriidilisedIsikud availableJuriidilineIsik = new JuriidilisedIsikud();
+        availableJuriidilineIsik.setId(2L);
+        availableJuriidilineIsik.setNimi("Another Company");
+        availableJuriidilisedIsikud.add(availableJuriidilineIsik);
+
+        availableIsikudMap.put("fyysilisedIsikud", availableFyysilisedIsikud);
+        availableIsikudMap.put("juriidilisedIsikud", availableJuriidilisedIsikud);
+
+        when(isikudService.getAvailableIsikudForYritus(1L)).thenReturn(availableIsikudMap);
+
+        mockMvc.perform(get("/api/isikud/get-saadavad-isikud?yritusId=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fyysilisedIsikud", hasSize(1)))
+                .andExpect(jsonPath("$.juriidilisedIsikud", hasSize(1)))
+                .andExpect(jsonPath("$.fyysilisedIsikud[0].eesnimi", is("Jane")))
+                .andExpect(jsonPath("$.juriidilisedIsikud[0].nimi", is("Another Company")));
+
+        verify(isikudService, times(1)).getAvailableIsikudForYritus(1L);
+    }
+
+    @Test
+    void getSaadavadIsikudByYritusId_ShouldReturnError_WhenYritusNotFound() throws Exception {
+        when(isikudService.getAvailableIsikudForYritus(999L))
+                .thenThrow(new RuntimeException("Event with ID 999 not found"));
+
+        mockMvc.perform(get("/api/isikud/get-saadavad-isikud?yritusId=999"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(containsString("Failed to retrieve available people for event")));
+
+        verify(isikudService, times(1)).getAvailableIsikudForYritus(999L);
     }
 }
