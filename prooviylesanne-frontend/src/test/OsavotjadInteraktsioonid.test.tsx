@@ -129,7 +129,7 @@ const mockAvailableParticipants = {
 			id: 3,
 			eesnimi: 'Available',
 			perekonnanimi: 'Person',
-			isikukood: '39001010071',
+			isikukood: '50307160336',
 			maksmiseViis: { id: 1, maksmiseViis: 'pangaülekanne' },
 			lisainfo: 'Available person info',
 		},
@@ -392,7 +392,7 @@ describe('Osavõtjate Interaktsioonide Testid', () => {
 
 			await user.type(eesnimi, 'John');
 			await user.type(perekonnanimi, 'Doe');
-			await user.type(isikukood, '39001010071');
+			await user.type(isikukood, '50307160336');
 			await user.selectOptions(maksmisviis, 'pangaülekanne');
 
 			await user.click(screen.getByText('Salvesta'));
@@ -428,7 +428,7 @@ describe('Osavõtjate Interaktsioonide Testid', () => {
 
 			await user.type(eesnimi, 'John');
 			await user.type(perekonnanimi, 'Doe');
-			await user.type(isikukood, '39001010071');
+			await user.type(isikukood, '50307160336');
 			await user.selectOptions(maksmisviis, 'pangaülekanne');
 
 			await user.click(screen.getByText('Salvesta'));
