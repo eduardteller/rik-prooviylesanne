@@ -362,7 +362,7 @@ const Osavotjad = () => {
 												Osavõtjate lisamine
 											</h2>
 
-											<div className="mt-4">
+											<div className="mt-4  ml-34">
 												<label
 													htmlFor="existingParticipant"
 													className="block text-sm font-medium text-gray-700 mb-2"
@@ -396,7 +396,7 @@ const Osavotjad = () => {
 														}
 													}}
 												>
-													<option value="">Vali osavõtja või lisa uus</option>
+													<option value="">Vali eksisteeriv osavõtja</option>
 													{availableParticipantsLoading && (
 														<option disabled>Laeb...</option>
 													)}

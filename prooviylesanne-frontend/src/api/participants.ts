@@ -232,6 +232,9 @@ export const useAddEraisik = () => {
 				queryClient.invalidateQueries({
 					queryKey: ['available-participants', variables.yritusId],
 				});
+				queryClient.invalidateQueries({
+					queryKey: ['events'],
+				});
 			}
 		},
 	});
@@ -252,6 +255,9 @@ export const useAddEttevote = () => {
 				});
 				queryClient.invalidateQueries({
 					queryKey: ['available-participants', variables.yritusId],
+				});
+				queryClient.invalidateQueries({
+					queryKey: ['events'],
 				});
 			}
 		},
@@ -287,6 +293,9 @@ export const useDeleteFyysilineIsik = () => {
 			queryClient.invalidateQueries({
 				queryKey: ['participants'],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ['events'],
+			});
 		},
 	});
 };
@@ -299,6 +308,9 @@ export const useDeleteJuriidilineIsik = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ['participants'],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['events'],
 			});
 		},
 	});
@@ -336,6 +348,9 @@ export const useUpdateFyysilineIsik = () => {
 			queryClient.invalidateQueries({
 				queryKey: ['participants'],
 			});
+			queryClient.invalidateQueries({
+				queryKey: ['events'],
+			});
 		},
 	});
 };
@@ -351,6 +366,9 @@ export const useUpdateJuriidilineIsik = () => {
 			});
 			queryClient.invalidateQueries({
 				queryKey: ['participants'],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['events'],
 			});
 		},
 	});
