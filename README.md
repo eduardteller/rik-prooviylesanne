@@ -82,6 +82,8 @@ _Andmebaasi skeem: https://i.imgur.com/eYNFmpt.png_
 2. Veendu, et Gradle on kõik vajalikud sõltuvused alla laadinud
 3. Käivita rakendus "Run" nupuga
 
+Backend testid saab käivitada IntelliJ IDEA-st
+
 ### 2. Frontend
 
 #### Samm-sammult juhend:
@@ -107,6 +109,8 @@ _Andmebaasi skeem: https://i.imgur.com/eYNFmpt.png_
    ```
 
    _Vite arendusserver käivitub ja näitab terminalis täpse aadressi (tavaliselt `http://localhost:5173`)._
+
+Frontend testide käivitamiseks kasuta `npm test`
 
 ## Lisa
 
