@@ -22,20 +22,34 @@ import {
 	type EttevoteFormData,
 } from './schemas/participantSchemas';
 
+// Tüüp olemasolevate osavõtjate jaoks (eraisik või ettevõte)
 type AvailableParticipant =
 	| (FyysilineIsik & { type: 'fyysiline' })
 	| (JuriidilineIsik & { type: 'juriidiline' });
 
+/**
+ * Osavõtjad komponent - ürituse osavõtjate halduse leht
+ *
+ * Võimaldab:
+ * - Vaadata ürituse infot ja olemasolevaid osavõtjaid
+ * - Lisada uusi osavõtjaid (eraisik või ettevõte)
+ * - Valida olemasolev osavõtja teisest üritusest
+ * - Kustutada osavõtjaid
+ * - Navigeerida osavõtja detailvaatesse
+ */
 const Osavotjad = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const location = useLocation();
+
+	// Oleku haldus osavõtja tüübi ja valiku jaoks
 	const [participantType, setParticipantType] = useState<
 		'eraisik' | 'ettevote'
 	>('eraisik');
 	const [selectedExistingParticipant, setSelectedExistingParticipant] =
 		useState<AvailableParticipant | null>(null);
 
+	// Abifunktsioon kõikide saadaolevate osavõtjate nimekirja koostamiseks
 	const getAllAvailableParticipants = (): AvailableParticipant[] => {
 		if (!availableParticipants) return [];
 
@@ -54,6 +68,7 @@ const Osavotjad = () => {
 		return [...fyysilised, ...juriidilised];
 	};
 
+	// Andmete laadimine serverist
 	const {
 		data: event,
 		isLoading: eventLoading,
@@ -72,11 +87,13 @@ const Osavotjad = () => {
 		error: availableParticipantsError,
 	} = useAvailableParticipants(id || '');
 
+	// Mutatsioonid andmete muutmiseks
 	const addEraisikMutation = useAddEraisik();
 	const addEttevoteMutation = useAddEttevote();
 	const deleteFyysilineIsikMutation = useDeleteFyysilineIsik();
 	const deleteJuriidilineIsikMutation = useDeleteJuriidilineIsik();
 
+	// Vormide seadistamine eraisiku ja ettevõtte jaoks
 	const eraisikForm = useForm<EraisikFormData>({
 		resolver: zodResolver(eraisikSchema),
 		defaultValues: {
@@ -99,6 +116,7 @@ const Osavotjad = () => {
 		},
 	});
 
+	// Eraisiku lisamise käsitlemine
 	const onSubmitEraisik = (data: EraisikFormData) => {
 		console.log('NICK', selectedExistingParticipant);
 
@@ -131,6 +149,7 @@ const Osavotjad = () => {
 		});
 	};
 
+	// Ettevõtte lisamise käsitlemine
 	const onSubmitEttevote = (data: EttevoteFormData) => {
 		const submitData =
 			selectedExistingParticipant &&
@@ -161,6 +180,7 @@ const Osavotjad = () => {
 		});
 	};
 
+	// Eraisiku kustutamise käsitlemine
 	const handleDeleteFyysilineIsik = (isikId: number) => {
 		if (
 			window.confirm('Kas olete kindel, et soovite selle eraisiku kustutada?')
@@ -177,6 +197,7 @@ const Osavotjad = () => {
 		}
 	};
 
+	// Ettevõtte kustutamise käsitlemine
 	const handleDeleteJuriidilineIsik = (isikId: number) => {
 		if (
 			window.confirm('Kas olete kindel, et soovite selle ettevõtte kustutada?')
@@ -213,6 +234,8 @@ const Osavotjad = () => {
 						<div>
 							<div className=" flex flex-col gap-8 ml-64">
 								<h2 className="text-bermuda-500 text-2xl">Osavõtjad</h2>
+
+								{/* Ürituse info ja osavõtjate nimekirja sektsioon */}
 								<div className="flex ">
 									<div className="flex gap-4 w-36 flex-col">
 										<p>Ürituse nimi:</p>
@@ -222,6 +245,7 @@ const Osavotjad = () => {
 										<p>Osavõtjad:</p>
 									</div>
 									<div className="flex text-gray-700  gap-5 text-sm flex-col flex-1">
+										{/* Ürituse andmete kuvamine */}
 										{eventLoading ? (
 											<>
 												<p>Laeb...</p>
@@ -250,6 +274,8 @@ const Osavotjad = () => {
 												<p>-</p>
 											</>
 										)}
+
+										{/* Osavõtjate nimekirja kuvamine */}
 										<div className=" mt-4 gap-4 flex flex-col h-24 overflow-y-auto">
 											{participantsLoading ? (
 												<p className="text-sm">Laeb osavõtjaid...</p>
@@ -259,6 +285,7 @@ const Osavotjad = () => {
 												</p>
 											) : participants ? (
 												<>
+													{/* Eraisikute nimekiri */}
 													{participants.fyysilisedIsikud.map((isik, index) => (
 														<div key={isik.id} className="flex text-sm">
 															<p className="w-44">
@@ -287,6 +314,8 @@ const Osavotjad = () => {
 															</div>
 														</div>
 													))}
+
+													{/* Ettevõtete nimekiri */}
 													{participants.juriidilisedIsikud.map(
 														(isik, index) => (
 															<div key={isik.id} className="flex text-sm">
@@ -338,6 +367,8 @@ const Osavotjad = () => {
 										</div>
 									</div>
 								</div>
+
+								{/* Osavõtjate lisamise vorm - kuvatakse ainult kui üritus pole möödunud */}
 								{!isEventExpired && (
 									<form
 										onSubmit={(e) => {
@@ -362,6 +393,7 @@ const Osavotjad = () => {
 												Osavõtjate lisamine
 											</h2>
 
+											{/* Olemasoleva osavõtja valik teistest üritustest */}
 											<div className="mt-4  ml-34">
 												<label
 													htmlFor="existingParticipant"
@@ -421,6 +453,7 @@ const Osavotjad = () => {
 												</select>
 											</div>
 
+											{/* Osavõtja tüübi valik (eraisik või ettevõte) */}
 											<div className="flex ml-34 mt-8 gap-16">
 												<div className="flex gap-1 items-center">
 													<input
@@ -459,8 +492,11 @@ const Osavotjad = () => {
 													<label htmlFor="ettevote">Ettevõte</label>
 												</div>
 											</div>
+
+											{/* Osavõtja andmete sisestamise vorm */}
 											<div className="flex mt-2 ">
 												<div className="flex gap-4 w-34 flex-col">
+													{/* Väljamärkused sõltuvalt valitud tüübist */}
 													{participantType === 'eraisik' ? (
 														<>
 															<p>Eesnimi:</p>
@@ -480,6 +516,7 @@ const Osavotjad = () => {
 													)}
 												</div>
 												<div className=" flex flex-col gap-2 w-64">
+													{/* Sisendväljad sõltuvalt valitud tüübist */}
 													{participantType === 'eraisik' ? (
 														<>
 															<div>
@@ -589,6 +626,7 @@ const Osavotjad = () => {
 															</div>
 														</>
 													)}
+													{/* Maksmisviisi valik - kuvatakse kõikidele osavõtjatele */}
 													<div>
 														<select
 															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -603,6 +641,7 @@ const Osavotjad = () => {
 															</option>
 															<option value="sularaha">Sularaha</option>
 														</select>
+														{/* Maksmisviisi valiku veateadete kuvamine */}
 														{participantType === 'eraisik' &&
 															eraisikForm.formState.errors.maksmiseViis &&
 															!selectedExistingParticipant && (
@@ -624,6 +663,7 @@ const Osavotjad = () => {
 																</p>
 															)}
 													</div>
+													{/* Lisainfo tekstiväli - vabatahtlik täiendav informatsioon */}
 													<div>
 														<textarea
 															className="border w-full border-gray-500 rounded-sm px-2 py-[2px] resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -635,6 +675,8 @@ const Osavotjad = () => {
 													</div>
 												</div>
 											</div>
+
+											{/* Vormi nupud - tagasi ja salvestamine */}
 											<div className="flex mt-8 gap-2">
 												<button
 													type="button"

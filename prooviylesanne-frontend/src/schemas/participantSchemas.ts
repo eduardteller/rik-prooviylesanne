@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/**
+ * Osavõtjate registreerimise skeem ja valideerimise loogika
+ * Kasutatakse eraisikute ja ettevõtete andmete kontrollimiseks
+ */
+
 // Eesti isikukoodi valideerimine
 const validateIsikukood = (isikukood: string): boolean => {
 	// Kontrolli, kas on täpselt 11 numbrit
@@ -93,6 +98,10 @@ const validateIsikukood = (isikukood: string): boolean => {
 	}
 };
 
+/**
+ * Eraisiku registreerimise andmete skeem
+ * Kontrollib kõiki eraisiku jaoks kohustuslikke välju
+ */
 export const eraisikSchema = z.object({
 	eesnimi: z.string().min(1, 'Eesnimi on kohustuslik'),
 	perekonnanimi: z.string().min(1, 'Perekonnanimi on kohustuslik'),
@@ -107,6 +116,10 @@ export const eraisikSchema = z.object({
 	lisainfo: z.string().optional(),
 });
 
+/**
+ * Ettevõtte registreerimise andmete skeem
+ * Kontrollib kõiki ettevõtte jaoks kohustuslikke välju
+ */
 export const ettevoteSchema = z.object({
 	nimi: z.string().min(1, 'Nimi on kohustuslik'),
 	registrikood: z
@@ -118,5 +131,9 @@ export const ettevoteSchema = z.object({
 	lisainfo: z.string().optional(),
 });
 
+/**
+ * TypeScript tüübid vormide andmete jaoks
+ * Genereeritakse automaatselt Zod skeemide põhjal
+ */
 export type EraisikFormData = z.infer<typeof eraisikSchema>;
 export type EttevoteFormData = z.infer<typeof ettevoteSchema>;

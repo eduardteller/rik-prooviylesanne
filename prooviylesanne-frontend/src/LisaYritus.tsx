@@ -6,15 +6,26 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import { eventSchema, type EventFormData } from './schemas/eventSchemas';
 
+/**
+ * LisaYritus komponent - uue ürituse lisamise vorm
+ *
+ * Võimaldab kasutajal:
+ * - Sisestada ürituse põhiandmed (nimi, aeg, koht, lisainfo)
+ * - Valideerida sisendandmeid
+ * - Saata andmed serverisse
+ * - Navigeerida tagasi avalehele
+ */
 const LisaYritus = () => {
 	const createEventMutation = useCreateEvent();
 	const navigate = useNavigate();
 
+	// Keelame mineviku kuupäevade valimise
 	const now = new Date();
 	const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
 		.toISOString()
 		.slice(0, 16);
 
+	// Vormi seadistamine valideerimise ja vaikeväärtustega
 	const {
 		register,
 		handleSubmit,
@@ -29,8 +40,11 @@ const LisaYritus = () => {
 			lisainfo: '',
 		},
 	});
+
+	// Ürituse lisamise käsitlemine
 	const onSubmit: SubmitHandler<EventFormData> = async (data) => {
 		try {
+			// Kuupäeva õige ajavööndi vormindamine serverile saatmiseks
 			const date = new Date(data.aeg);
 			const timezoneOffset = date.getTimezoneOffset();
 			const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60);
@@ -74,12 +88,15 @@ const LisaYritus = () => {
 				<div className="relative mx-auto h-screen w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 					<div className="mt-4 flex flex-col  w-full">
+						{/* Ülemine sektsioon banner pildiga */}
 						<div className="flex h-18 w-full overflow-hidden">
 							<div className="pl-8 pr-8 py-4 bg-bermuda-500 text-3xl font-light text-white">
 								<h2>Ürituse lisamine</h2>
 							</div>
 							<img src="/libled.jpg" className="object-cover flex-1" alt="" />
-						</div>{' '}
+						</div>
+
+						{/* Peamine sisu - ürituse andmete sisestamise vorm */}
 						<div className="bg-white px-8 pt-8 pb-20  flex flex-col">
 							<form onSubmit={handleSubmit(onSubmit)}>
 								<div className=" flex flex-col gap-8 ml-64">
@@ -94,6 +111,7 @@ const LisaYritus = () => {
 											<p>Lisainfo:</p>
 										</div>
 										<div className=" flex flex-col gap-2 w-64">
+											{/* Ürituse nime sisestamise väli */}
 											<div>
 												<input
 													{...register('nimi')}
@@ -105,7 +123,9 @@ const LisaYritus = () => {
 														{errors.nimi.message}
 													</p>
 												)}
-											</div>{' '}
+											</div>
+
+											{/* Toimumisaja sisestamise väli */}
 											<div>
 												<input
 													{...register('aeg')}
@@ -119,6 +139,8 @@ const LisaYritus = () => {
 													</p>
 												)}
 											</div>
+
+											{/* Koha sisestamise väli */}
 											<div>
 												<input
 													{...register('koht')}
@@ -131,6 +153,8 @@ const LisaYritus = () => {
 													</p>
 												)}
 											</div>
+
+											{/* Lisainfo sisestamise väli */}
 											<div>
 												<textarea
 													{...register('lisainfo')}
@@ -146,6 +170,8 @@ const LisaYritus = () => {
 											</div>
 										</div>
 									</div>
+
+									{/* Tegevusnupud */}
 									<div className="flex gap-2">
 										<button
 											type="button"

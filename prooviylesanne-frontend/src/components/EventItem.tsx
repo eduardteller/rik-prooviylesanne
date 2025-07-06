@@ -1,12 +1,21 @@
 import { useLocation, useNavigate } from 'react-router';
 import { formatDate, useDeleteEvent, type Event } from '../api/events';
 
+/**
+ * EventItem komponendi omadused
+ */
 interface EventItemProps {
 	event: Event;
 	index: number;
 	showRemoveButton?: boolean;
 }
 
+/**
+ * EventItem komponent - kuvab ühe ürituse andmed loendis
+ *
+ * Komponent näitab ürituse põhiinfot ja võimaldab navigeerida osavõtjate vaatele.
+ * Vajadusel saab ürituse ka kustutada.
+ */
 export const EventItem = ({
 	event,
 	index,
@@ -15,6 +24,11 @@ export const EventItem = ({
 	const navigate = useNavigate();
 	const location = useLocation();
 	const deleteEventMutation = useDeleteEvent();
+
+	/**
+	 * Ürituse kustutamise loogika
+	 * Küsib kasutajalt kinnitust ja kustutab ürituse serverist
+	 */
 	const handleDelete = () => {
 		if (
 			window.confirm(
@@ -28,8 +42,10 @@ export const EventItem = ({
 			});
 		}
 	};
+
 	return (
 		<div id={event.id.toString()} className="w-full flex justify-between">
+			{/* Ürituse põhiandmed - nimi, kuupäev, koht ja osavõtjate arv */}
 			<div className="flex gap-2 items-center flex-1">
 				<p className=" w-24 truncate">
 					{' '}
@@ -39,6 +55,8 @@ export const EventItem = ({
 				<p className=" w-28 truncate">{event.koht}</p>
 				<p className=" w-8 truncate">{event.isikudCount}</p>
 			</div>
+
+			{/* Toimingute nupud - osavõtjad ja kustutamine */}
 			<div className="flex gap-2 items-center">
 				{' '}
 				<button

@@ -17,19 +17,24 @@ import {
 	type EttevoteFormData,
 } from './schemas/participantSchemas';
 
+/**
+ * Osavõtja detailvaade komponent
+ * Võimaldab vaadata ja muuta osavõtja (eraisik või ettevõte) andmeid
+ */
 const OsavotjadDetail = () => {
+	// URL parameetritest saame osavõtja ID ja tüübi (eraisik või juriidiline)
 	const { id, type } = useParams<{ id: string; type: string }>();
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	// Get the previous location from navigation state, fallback to home page
+	// Salvestame eelmise lehe aadressi, et saaks tagasi minna
 	const previousLocation = (location.state as { from?: string })?.from || '/';
 
-	// Function to navigate back to the previous page
 	const goBack = () => {
 		navigate(previousLocation);
 	};
 
+	// Laadime osavõtja andmed vastavalt tüübile
 	const {
 		data: fyysilineIsikData,
 		isLoading: isFyysilineLoading,
@@ -42,11 +47,13 @@ const OsavotjadDetail = () => {
 		error: juriidilineError,
 	} = useJuriidilineIsik(id || '', type === 'juriidiline');
 
+	// Määrame praeguse andmete allikad sõltuvalt osavõtja tüübist
 	const isEraisik = type === 'eraisik';
 	const currentData = isEraisik ? fyysilineIsikData : juriidilineIsikData;
 	const isLoading = isEraisik ? isFyysilineLoading : isJuriidilineLoading;
 	const error = isEraisik ? fyysilineError : juriidilineError;
 
+	// Loome vormid mõlema osavõtja tüübi jaoks
 	const eraisikForm = useForm<EraisikFormData>({
 		resolver: zodResolver(eraisikSchema),
 	});
@@ -55,11 +62,14 @@ const OsavotjadDetail = () => {
 		resolver: zodResolver(ettevoteSchema),
 	});
 
+	// Valime õige vormi vastavalt osavõtja tüübile
 	const currentForm = isEraisik ? eraisikForm : ettevoteForm;
 
+	// Loome andmete uuendamise funktsioonid
 	const updateFyysilineIsikMutation = useUpdateFyysilineIsik();
 	const updateJuriidilineIsikMutation = useUpdateJuriidilineIsik();
 
+	// Täidame vormi andmeid kui need on laetud
 	useEffect(() => {
 		if (currentData) {
 			if (isEraisik && 'eesnimi' in currentData) {
@@ -82,10 +92,12 @@ const OsavotjadDetail = () => {
 		}
 	}, [currentData, isEraisik, eraisikForm, ettevoteForm]);
 
+	// Vormi esitamise funktsioon - uuendab osavõtja andmeid
 	const onSubmit = async (data: EraisikFormData | EttevoteFormData) => {
 		if (!id) return;
 
 		try {
+			// Uuendame eraisiku andmeid
 			if (isEraisik && 'eesnimi' in data) {
 				await updateFyysilineIsikMutation.mutateAsync({
 					id: parseInt(id),
@@ -97,7 +109,9 @@ const OsavotjadDetail = () => {
 				});
 				alert('Eraisiku andmed uuendatud edukalt!');
 				goBack();
-			} else if (!isEraisik && 'nimi' in data) {
+			}
+			// Uuendame ettevõtte andmeid
+			else if (!isEraisik && 'nimi' in data) {
 				await updateJuriidilineIsikMutation.mutateAsync({
 					id: parseInt(id),
 					nimi: data.nimi,
@@ -114,6 +128,7 @@ const OsavotjadDetail = () => {
 		}
 	};
 
+	// Kui andmed laadivad, näitame laadimise sõnumit
 	if (isLoading) {
 		return (
 			<main className="bg-[#eef2f5] min-h-screen">
@@ -138,6 +153,7 @@ const OsavotjadDetail = () => {
 		);
 	}
 
+	// Kui andmete laadimisel tekkis viga, näitame veateadet
 	if (error) {
 		return (
 			<main className="bg-[#eef2f5] min-h-screen">
@@ -164,6 +180,7 @@ const OsavotjadDetail = () => {
 		);
 	}
 
+	// Peamine vaade kus kuvatakse ja saab muuta osavõtja andmeid
 	return (
 		<main className="bg-[#eef2f5] min-h-screen">
 			<div className="relative mx-auto  w-full max-w-5xl py-8 flex flex-col">
@@ -183,6 +200,7 @@ const OsavotjadDetail = () => {
 								<form onSubmit={currentForm.handleSubmit(onSubmit)}>
 									<div className=" flex flex-col  ">
 										<div className="flex mt-2 ">
+											{/* Väljade nimed vasakul poolel */}
 											<div className="flex gap-4 w-34 flex-col">
 												{type === 'eraisik' ? (
 													<>
@@ -202,9 +220,11 @@ const OsavotjadDetail = () => {
 													</>
 												)}
 											</div>
+											{/* Sisestusväljad paremal poolel */}
 											<div className=" flex flex-col gap-2 w-64">
 												{type === 'eraisik' ? (
 													<>
+														{/* Eraisiku andmete sisestusväljad */}
 														<div>
 															<input
 																{...eraisikForm.register('eesnimi')}
@@ -250,6 +270,7 @@ const OsavotjadDetail = () => {
 													</>
 												) : (
 													<>
+														{/* Ettevõtte andmete sisestusväljad */}
 														<div>
 															<input
 																{...ettevoteForm.register('nimi')}
@@ -294,6 +315,7 @@ const OsavotjadDetail = () => {
 														</div>
 													</>
 												)}
+												{/* Maksmisviisi valik (ühine mõlemale tüübile) */}
 												<div>
 													<select
 														{...(type === 'eraisik'
@@ -324,6 +346,7 @@ const OsavotjadDetail = () => {
 															</p>
 														)}
 												</div>
+												{/* Lisainfo tekstiväli */}
 												<div>
 													<textarea
 														{...(type === 'eraisik'
@@ -334,6 +357,7 @@ const OsavotjadDetail = () => {
 												</div>
 											</div>
 										</div>
+										{/* Nupud vormi allosas */}
 										<div className="flex mt-8 gap-2">
 											<button
 												type="button"

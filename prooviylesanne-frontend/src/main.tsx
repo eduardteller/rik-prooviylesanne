@@ -7,11 +7,23 @@ import LisaYritus from './LisaYritus.tsx';
 import Osavotjad from './Osavotjad.tsx';
 import OsavotjadDetail from './OsavotjadDetail.tsx';
 
+/**
+ * Rakenduse peamine sisendpunkt
+ *
+ * Seadistab rakenduse alustalade:
+ * - React Query kliendi serveripäringute haldamiseks
+ * - Marsruutimise süsteemi erinevate lehekülgede vahel liikumiseks
+ * - Kõikide lehekülgede komponentide seostamise URL-idega
+ */
+
+// Loome React Query kliendi serveri andmete puhverdamiseks ja haldamiseks
 const queryClient = new QueryClient();
 
+// Käivitame React rakenduse ja renderdame selle HTML-i root elemendisse
 createRoot(document.getElementById('root')!).render(
 	<QueryClientProvider client={queryClient}>
 		<BrowserRouter>
+			{/* Määrame kõik rakenduse marsruudid ja nendega seotud komponendid */}
 			<Routes>
 				<Route path="/" element={<Avaleht />} />
 				<Route path="/lisa-yritus" element={<LisaYritus />} />

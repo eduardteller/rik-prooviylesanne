@@ -1,5 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+/**
+ * Osavõtjate API - haldab füüsiliste ja juriidiliste isikute andmeid
+ * ning nende seost üritustega
+ */
+
+// Andmestruktuurid osavõtjate jaoks
 export interface MaksmiseViis {
 	id: number;
 	maksmiseViis: string;
@@ -28,6 +34,7 @@ export interface ParticipantsResponse {
 	juriidilisedIsikud: JuriidilineIsik[];
 }
 
+// Päringute andmestruktuurid
 export interface EraisikRequest {
 	eesnimi: string;
 	perekonnanimi: string;
@@ -66,6 +73,12 @@ export interface JuriidilineIsikUpdateRequest {
 	lisainfo?: string;
 }
 
+/**
+ * API funktsioonid osavõtjate haldamiseks
+ * Kõik funktsioonid suhtlevad backend serveriga
+ */
+
+// Uue eraisiku lisamine
 const addEraisik = async (data: EraisikRequest): Promise<void> => {
 	const response = await fetch(
 		'http://localhost:8080/api/isikud/add-fyysiline-isik',
@@ -83,6 +96,7 @@ const addEraisik = async (data: EraisikRequest): Promise<void> => {
 	}
 };
 
+// Uue ettevõtte lisamine
 const addEttevote = async (data: EttevoteRequest): Promise<void> => {
 	const response = await fetch(
 		'http://localhost:8080/api/isikud/add-juriidiline-isik',
@@ -100,6 +114,7 @@ const addEttevote = async (data: EttevoteRequest): Promise<void> => {
 	}
 };
 
+// Ürituse kõigi osavõtjate laadimine
 const fetchParticipants = async (
 	yritusId: string
 ): Promise<ParticipantsResponse> => {
@@ -114,6 +129,7 @@ const fetchParticipants = async (
 	return response.json();
 };
 
+// Saadaolevate osavõtjate laadimine (teistest üritustest)
 const fetchAvailableParticipants = async (
 	yritusId: string
 ): Promise<ParticipantsResponse> => {
@@ -128,6 +144,7 @@ const fetchAvailableParticipants = async (
 	return response.json();
 };
 
+// Osavõtjate kustutamine
 const deleteFyysilineIsik = async (id: number): Promise<void> => {
 	const response = await fetch(
 		`http://localhost:8080/api/isikud/delete-fyysiline-isik?id=${id}`,
@@ -154,6 +171,7 @@ const deleteJuriidilineIsik = async (id: number): Promise<void> => {
 	}
 };
 
+// Üksiku osavõtja andmete laadimine
 const fetchFyysilineIsik = async (id: string): Promise<FyysilineIsik> => {
 	const response = await fetch(
 		`http://localhost:8080/api/isikud/get-fyysiline-isik?id=${id}`
@@ -178,6 +196,7 @@ const fetchJuriidilineIsik = async (id: string): Promise<JuriidilineIsik> => {
 	return response.json();
 };
 
+// Osavõtjate andmete uuendamine
 const updateFyysilineIsik = async (
 	data: FyysilineIsikUpdateRequest
 ): Promise<void> => {
@@ -216,12 +235,19 @@ const updateJuriidilineIsik = async (
 	}
 };
 
+/**
+ * React Query hookid osavõtjate haldamiseks
+ * Kõik hookid kasutavad automaatset cache'imist ja andmete uuendamist
+ */
+
+// Mutatsioonid - toimingud mis muudavad andmeid serveris
 export const useAddEraisik = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: addEraisik,
 		onSuccess: (_, variables) => {
+			// Uuendame cache'i pärast edukat lisamist
 			if (variables.yritusId) {
 				queryClient.invalidateQueries({
 					queryKey: ['participants', variables.yritusId],
@@ -246,6 +272,7 @@ export const useAddEttevote = () => {
 	return useMutation({
 		mutationFn: addEttevote,
 		onSuccess: (_, variables) => {
+			// Uuendame cache'i pärast edukat lisamist
 			if (variables.yritusId) {
 				queryClient.invalidateQueries({
 					queryKey: ['participants', variables.yritusId],
@@ -264,13 +291,14 @@ export const useAddEttevote = () => {
 	});
 };
 
+// Päringud - andmete laadimine serverist
 export const useParticipants = (yritusId: string) => {
 	return useQuery({
 		queryKey: ['participants', yritusId],
 		queryFn: () => fetchParticipants(yritusId),
-		enabled: !!yritusId, // Only run query if yritusId is provided
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes
+		enabled: !!yritusId, // Päring käivitatakse ainult kui yritusId on olemas
+		staleTime: 5 * 60 * 1000, // 5 minutit - andmed loetakse värskeks
+		gcTime: 10 * 60 * 1000, // 10 minutit - andmed säilivad cache'is
 	});
 };
 
@@ -278,18 +306,20 @@ export const useAvailableParticipants = (yritusId: string) => {
 	return useQuery({
 		queryKey: ['available-participants', yritusId],
 		queryFn: () => fetchAvailableParticipants(yritusId),
-		enabled: !!yritusId, // Only run query if yritusId is provided
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes
+		enabled: !!yritusId,
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000,
 	});
 };
 
+// Kustutamise mutatsioonid
 export const useDeleteFyysilineIsik = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: deleteFyysilineIsik,
 		onSuccess: () => {
+			// Uuendame kõiki seotud päringuid pärast kustutamist
 			queryClient.invalidateQueries({
 				queryKey: ['participants'],
 			});
@@ -316,13 +346,14 @@ export const useDeleteJuriidilineIsik = () => {
 	});
 };
 
+// Üksiku osavõtja andmete laadimine
 export const useFyysilineIsik = (id: string, enabled = true) => {
 	return useQuery({
 		queryKey: ['fyysiline-isik', id],
 		queryFn: () => fetchFyysilineIsik(id),
 		enabled: enabled && !!id,
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000,
 	});
 };
 
@@ -331,17 +362,19 @@ export const useJuriidilineIsik = (id: string, enabled = true) => {
 		queryKey: ['juriidiline-isik', id],
 		queryFn: () => fetchJuriidilineIsik(id),
 		enabled: enabled && !!id,
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		gcTime: 10 * 60 * 1000, // 10 minutes
+		staleTime: 5 * 60 * 1000,
+		gcTime: 10 * 60 * 1000,
 	});
 };
 
+// Andmete uuendamise mutatsioonid
 export const useUpdateFyysilineIsik = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: updateFyysilineIsik,
 		onSuccess: (_, variables) => {
+			// Uuendame konkreetse osavõtja andmeid cache'is
 			queryClient.invalidateQueries({
 				queryKey: ['fyysiline-isik', variables.id.toString()],
 			});

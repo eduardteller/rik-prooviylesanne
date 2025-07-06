@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+/**
+ * Ürituse andmete tüüp, mis sisaldab kogu vajalikku infot ürituse kohta
+ */
 export interface Event {
 	id: number;
 	nimi: string;
@@ -9,6 +12,9 @@ export interface Event {
 	isikudCount: number;
 }
 
+/**
+ * Uue ürituse loomise andmete tüüp
+ */
 export interface CreateEventRequest {
 	nimi: string;
 	aeg: string;
@@ -16,6 +22,9 @@ export interface CreateEventRequest {
 	lisainfo: string;
 }
 
+/**
+ * Kõikide ürituste andmete pärimine serverist
+ */
 const fetchEvents = async (): Promise<Event[]> => {
 	const response = await fetch('http://localhost:8080/get-yritused');
 
@@ -26,6 +35,9 @@ const fetchEvents = async (): Promise<Event[]> => {
 	return response.json();
 };
 
+/**
+ * Konkreetse ürituse kustutamine ID järgi
+ */
 const deleteEvent = async (id: number): Promise<void> => {
 	const response = await fetch(`http://localhost:8080/delete-yritus?id=${id}`, {
 		method: 'GET',
@@ -36,6 +48,9 @@ const deleteEvent = async (id: number): Promise<void> => {
 	}
 };
 
+/**
+ * Uue ürituse loomine serveris
+ */
 const createEvent = async (eventData: CreateEventRequest): Promise<void> => {
 	const response = await fetch('http://localhost:8080/add-yritus', {
 		method: 'POST',
@@ -50,6 +65,9 @@ const createEvent = async (eventData: CreateEventRequest): Promise<void> => {
 	}
 };
 
+/**
+ * Konkreetse ürituse andmete pärimine ID järgi
+ */
 const fetchEvent = async (id: string): Promise<Event> => {
 	const response = await fetch(`http://localhost:8080/get-yritused?id=${id}`);
 
@@ -60,6 +78,10 @@ const fetchEvent = async (id: string): Promise<Event> => {
 	return response.json();
 };
 
+/**
+ * React Query hook kõikide ürituste andmete laadimiseks
+ * Sisaldab automaatset vahemällu salvestamist ja uuendamist
+ */
 export const useEvents = () => {
 	return useQuery({
 		queryKey: ['events'],
@@ -69,6 +91,10 @@ export const useEvents = () => {
 	});
 };
 
+/**
+ * React Query mutatsioon ürituse kustutamiseks
+ * Pärast edukat kustutamist uuendab automaatselt ürituste nimekirja
+ */
 export const useDeleteEvent = () => {
 	const queryClient = useQueryClient();
 
@@ -81,6 +107,10 @@ export const useDeleteEvent = () => {
 	});
 };
 
+/**
+ * React Query mutatsioon uue ürituse loomiseks
+ * Pärast edukat loomist uuendab automaatselt ürituste nimekirja
+ */
 export const useCreateEvent = () => {
 	const queryClient = useQueryClient();
 
@@ -93,6 +123,10 @@ export const useCreateEvent = () => {
 	});
 };
 
+/**
+ * React Query hook konkreetse ürituse andmete laadimiseks
+ * Käivitub ainult siis, kui ID on olemas
+ */
 export const useEvent = (id: string) => {
 	return useQuery({
 		queryKey: ['event', id],
@@ -103,6 +137,10 @@ export const useEvent = (id: string) => {
 	});
 };
 
+/**
+ * Ürituste jaotamine tulevasteks ja toimunud üritusteks
+ * Tagastab mõlemad nimekirjad kuupäeva järgi sorteerituna
+ */
 export const categorizeEvents = (events: Event[]) => {
 	const now = new Date();
 
@@ -119,6 +157,9 @@ export const categorizeEvents = (events: Event[]) => {
 	};
 };
 
+/**
+ * Kuupäeva vormindamine eesti keelse kuupäeva kuvamiseks
+ */
 export const formatDate = (dateString: string): string => {
 	const date = new Date(dateString);
 	return date.toLocaleDateString('et-EE', {
