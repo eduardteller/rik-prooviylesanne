@@ -196,9 +196,7 @@ describe('Osavõtjate vormi testid', () => {
 			const dropdown = screen.getByLabelText('Vali olemasolev osavõtja:');
 			expect(dropdown).toBeInTheDocument();
 
-			expect(
-				screen.getByText('Vali osavõtja või lisa uus')
-			).toBeInTheDocument();
+			expect(screen.getByText('Vali olemasolev osavõtja:')).toBeInTheDocument();
 
 			expect(
 				screen.getByText('Available Person (Eraisik)')
