@@ -26,7 +26,7 @@ function Avaleht() {
 	return (
 		<>
 			<main className="bg-[#eef2f5] min-h-screen">
-				<div className="relative mx-auto h-screen w-full max-w-5xl py-8 flex flex-col">
+				<div className="relative mx-auto w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 
 					{/* Ülemine sektsioon - tutvustav banner pildiga */}
@@ -51,10 +51,10 @@ function Avaleht() {
 					</div>
 
 					{/* Peamine sisu - ürituste nimekirjad */}
-					<div className="mt-4 w-full flex-1 flex flex-col min-h-0">
-						<div className="w-full h-full flex gap-4 flex-1">
+					<div className="mt-4 w-full h-96 flex flex-col">
+						<div className="w-full h-full flex gap-4">
 							{/* Tulevaste ürituste pool */}
-							<div className="basis-1/2 flex flex-col items-center bg-white text-white ">
+							<div className="basis-1/2 flex flex-col items-center h-full bg-white text-white ">
 								<h1 className="py-4 text-xl bg-bermuda-500 w-full text-center">
 									Tulevased üritused
 								</h1>
@@ -93,7 +93,7 @@ function Avaleht() {
 							</div>
 
 							{/* Toimunud ürituste pool */}
-							<div className="basis-1/2 flex flex-col items-center bg-white text-white ">
+							<div className="basis-1/2 flex h-full flex-col items-center bg-white text-white ">
 								<h1 className="py-4 text-xl bg-bermuda-500 w-full text-center">
 									Toimunud üritused
 								</h1>

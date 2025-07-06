@@ -85,7 +85,7 @@ const LisaYritus = () => {
 	return (
 		<>
 			<main className="bg-[#eef2f5] min-h-screen">
-				<div className="relative mx-auto h-screen w-full max-w-5xl py-8 flex flex-col">
+				<div className="relative mx-auto w-full max-w-5xl py-8 flex flex-col">
 					<Header />
 					<div className="mt-4 flex flex-col  w-full">
 						{/* Ülemine sektsioon banner pildiga */}
