@@ -1,10 +1,11 @@
 package com.rik.prooviylesanne.repository;
 
-import com.rik.prooviylesanne.model.MaksmiseViisid;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.rik.prooviylesanne.model.MaksmiseViisid;
 
 @Repository
 public interface MaksmiseViisidRepository extends JpaRepository<MaksmiseViisid, Long> {

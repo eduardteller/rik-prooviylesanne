@@ -1,5 +1,13 @@
 package com.rik.prooviylesanne.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.rik.prooviylesanne.model.FyysilisedIsikud;
 import com.rik.prooviylesanne.model.JuriidilisedIsikud;
 import com.rik.prooviylesanne.model.MaksmiseViisid;
@@ -10,16 +18,14 @@ import com.rik.prooviylesanne.repository.JuriidilisedIsikudRepository;
 import com.rik.prooviylesanne.repository.MaksmiseViisidRepository;
 import com.rik.prooviylesanne.repository.YritusedIsikudRepository;
 import com.rik.prooviylesanne.repository.YritusedRepository;
+
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
+/**
+ * Teenuse klass isikute haldamiseks üritustel.
+ * Tegeleb nii füüsiliste kui ka juriidiliste isikutega - nende lisamise,
+ * kustutamise, uuendamise ja päringutega.
+ */
 @Service
 public class IsikudService {
 
@@ -29,7 +35,6 @@ public class IsikudService {
     private final YritusedIsikudRepository yritusedIsikudRepository;
     private final MaksmiseViisidRepository maksmiseViisidRepository;
 
-    @Autowired
     public IsikudService(
             FyysilisedIsikudRepository fyysilisedIsikudRepository,
             JuriidilisedIsikudRepository juriidilisedIsikudRepository,
@@ -43,6 +48,9 @@ public class IsikudService {
         this.maksmiseViisidRepository = maksmiseViisidRepository;
     }
 
+    /**
+     * Kontrollimise meetodid - kas isik juba olemas andmebaasis
+     */
     public boolean fyysilineIsikExists(FyysilisedIsikud isik) {
         return fyysilisedIsikudRepository.existsByIsikukood(
                 isik.getIsikukood());
@@ -53,22 +61,32 @@ public class IsikudService {
                 isik.getRegistrikood());
     }
 
+    /**
+     * Uue füüsilise isiku lisamine üritusele.
+     * Kontrollib dubleerimist, leidub maksmise viisi ja salvestab isiku koos
+     * seosega.
+     */
     @Transactional
     public FyysilisedIsikud addFyysilineIsikToYritus(FyysilisedIsikud isik, Long yritusId, String maksmiseViisString) {
+        // Kontrolli, et sama isik pole juba olemas
         if (fyysilineIsikExists(isik)) {
-            throw new IllegalArgumentException("Duplicate person: A physical person with the same properties already exists");
+            throw new IllegalArgumentException(
+                    "Duplicate person: A physical person with the same properties already exists");
         }
 
+        // Leia üritus ID järgi
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
         }
 
+        // Seadista maksmise viis
         MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
                 .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
 
         isik.setMaksmiseViis(maksmiseViis);
 
+        // Salvesta isik ja loo seos üritusega
         FyysilisedIsikud savedIsik = fyysilisedIsikudRepository.save(isik);
 
         YritusedIsikud yritusedIsik = new YritusedIsikud();
@@ -79,12 +97,20 @@ public class IsikudService {
         return savedIsik;
     }
 
+    /**
+     * Uue juriidilise isiku lisamine üritusele.
+     * Töötab sarnaselt füüsilise isiku lisamisega.
+     */
     @Transactional
-    public JuriidilisedIsikud addJuriidilineIsikToYritus(JuriidilisedIsikud isik, Long yritusId, String maksmiseViisString) {
+    public JuriidilisedIsikud addJuriidilineIsikToYritus(JuriidilisedIsikud isik, Long yritusId,
+            String maksmiseViisString) {
+        // Kontrolli, et sama ettevõte pole juba olemas
         if (juriidilineIsikExists(isik)) {
-            throw new IllegalArgumentException("Duplicate entity: A legal entity with the same properties already exists");
+            throw new IllegalArgumentException(
+                    "Duplicate entity: A legal entity with the same properties already exists");
         }
 
+        // Leia üritus ja seadista maksmise viis
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Yritus with ID " + yritusId + " not found");
@@ -95,6 +121,7 @@ public class IsikudService {
 
         isik.setMaksmiseViis(maksmiseViis);
 
+        // Salvesta isik ja loo seos üritusega
         JuriidilisedIsikud savedIsik = juriidilisedIsikudRepository.save(isik);
 
         YritusedIsikud yritusedIsik = new YritusedIsikud();
@@ -105,6 +132,10 @@ public class IsikudService {
         return savedIsik;
     }
 
+    /**
+     * Kustutamise meetodid.
+     * Eemaldab isiku kõikidest üritustest ja kustutab seejärel isiku enda.
+     */
     @Transactional
     public boolean deleteFyysilineIsik(Long id) {
         Optional<FyysilisedIsikud> isikOpt = fyysilisedIsikudRepository.findById(id);
@@ -112,8 +143,10 @@ public class IsikudService {
         if (isikOpt.isPresent()) {
             FyysilisedIsikud isik = isikOpt.get();
 
+            // Eemalda kõik seosed üritustega
             yritusedIsikudRepository.deleteByFyysilineIsikId(isik);
 
+            // Kustuta isik
             fyysilisedIsikudRepository.delete(isik);
             return true;
         }
@@ -128,8 +161,10 @@ public class IsikudService {
         if (isikOpt.isPresent()) {
             JuriidilisedIsikud isik = isikOpt.get();
 
+            // Eemalda kõik seosed üritustega
             yritusedIsikudRepository.deleteByJuriidilineIsikId(isik);
 
+            // Kustuta isik
             juriidilisedIsikudRepository.delete(isik);
             return true;
         }
@@ -137,15 +172,21 @@ public class IsikudService {
         return false;
     }
 
+    /**
+     * Tagastab kõik isikud, kes on kindlal üritusel registreeritud.
+     * Eraldab füüsilised ja juriidilised isikud.
+     */
     public Map<String, Object> getAllIsikudForYritus(Long yritusId) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(yritusId);
         if (!yritusOpt.isPresent()) {
             throw new RuntimeException("Event with ID " + yritusId + " not found");
         }
 
+        // Leia kõik üritusele registreeritud isikud
         Yritused yritus = yritusOpt.get();
         List<YritusedIsikud> yritusedIsikud = yritusedIsikudRepository.findByYritus(yritus);
 
+        // Eralda füüsilised ja juriidilised isikud
         List<FyysilisedIsikud> fyysilisedIsikud = new ArrayList<>();
         List<JuriidilisedIsikud> juriidilisedIsikud = new ArrayList<>();
 
@@ -165,13 +206,14 @@ public class IsikudService {
     }
 
     /**
-     * Gets all persons (both physical and legal) that are available to be added to an event
-     * (persons that are not already associated with this event)
+     * Tagastab kõik isikud, kes veel kindlal üritusel registreeritud ei ole.
+     * Kasutatakse olemasolevate isikute lisamise valikute näitamiseks.
      */
     public Map<String, Object> getAvailableIsikudForYritus(Long yritusId) {
         Yritused yritus = yritusedRepository.findById(yritusId)
                 .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
 
+        // Leia juba registreeritud isikud
         List<YritusedIsikud> yritusedIsikud = yritusedIsikudRepository.findByYritus(yritus);
 
         List<Long> existingFyysilisedIsikudIds = yritusedIsikud.stream()
@@ -184,8 +226,8 @@ public class IsikudService {
                 .map(yi -> yi.getJuriidilineIsikId().getId())
                 .toList();
 
+        // Leia kõik isikud ja filtreeri välja juba registreeritud
         List<FyysilisedIsikud> allFyysilisedIsikud = fyysilisedIsikudRepository.findAll();
-
         List<JuriidilisedIsikud> allJuriidilisedIsikud = juriidilisedIsikudRepository.findAll();
 
         List<FyysilisedIsikud> availableFyysilisedIsikud = allFyysilisedIsikud.stream()
@@ -203,6 +245,10 @@ public class IsikudService {
         return result;
     }
 
+    /**
+     * Uuendamise meetodid.
+     * Võimaldab muuta olemasoleva isiku andmeid.
+     */
     @Transactional
     public FyysilisedIsikud updateFyysilineIsik(Long id, FyysilisedIsikud updatedIsik, String maksmiseViisString) {
         Optional<FyysilisedIsikud> isikOpt = fyysilisedIsikudRepository.findById(id);
@@ -212,11 +258,13 @@ public class IsikudService {
 
         FyysilisedIsikud existingIsik = isikOpt.get();
 
+        // Uuenda kõik väljad
         existingIsik.setEesnimi(updatedIsik.getEesnimi());
         existingIsik.setPerekonnanimi(updatedIsik.getPerekonnanimi());
         existingIsik.setIsikukood(updatedIsik.getIsikukood());
         existingIsik.setLisainfo(updatedIsik.getLisainfo());
 
+        // Uuenda maksmise viis kui vajalaik
         if (maksmiseViisString != null && !maksmiseViisString.isEmpty()) {
             MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
                     .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
@@ -227,7 +275,8 @@ public class IsikudService {
     }
 
     @Transactional
-    public JuriidilisedIsikud updateJuriidilineIsik(Long id, JuriidilisedIsikud updatedIsik, String maksmiseViisString) {
+    public JuriidilisedIsikud updateJuriidilineIsik(Long id, JuriidilisedIsikud updatedIsik,
+            String maksmiseViisString) {
         Optional<JuriidilisedIsikud> isikOpt = juriidilisedIsikudRepository.findById(id);
         if (!isikOpt.isPresent()) {
             throw new RuntimeException("Legal entity with ID " + id + " not found");
@@ -235,11 +284,13 @@ public class IsikudService {
 
         JuriidilisedIsikud existingIsik = isikOpt.get();
 
+        // Uuenda kõik väljad
         existingIsik.setNimi(updatedIsik.getNimi());
         existingIsik.setRegistrikood(updatedIsik.getRegistrikood());
         existingIsik.setOsavotjateArv(updatedIsik.getOsavotjateArv());
         existingIsik.setLisainfo(updatedIsik.getLisainfo());
 
+        // Uuenda maksmise viis kui vajalaik
         if (maksmiseViisString != null && !maksmiseViisString.isEmpty()) {
             MaksmiseViisid maksmiseViis = maksmiseViisidRepository.findByMaksmiseViis(maksmiseViisString)
                     .orElseThrow(() -> new IllegalArgumentException("Payment method not found: " + maksmiseViisString));
@@ -249,6 +300,9 @@ public class IsikudService {
         return juriidilisedIsikudRepository.save(existingIsik);
     }
 
+    /**
+     * Lihtsad pärimise meetodid ID järgi.
+     */
     public FyysilisedIsikud getFyysilineIsikById(Long id) {
         return fyysilisedIsikudRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Physical person with ID " + id + " not found"));
@@ -259,14 +313,20 @@ public class IsikudService {
                 .orElseThrow(() -> new RuntimeException("Legal entity with ID " + id + " not found"));
     }
 
+    /**
+     * Olemasoleva isiku lisamine üritusele.
+     * Kasutatakse juba andmebaasis olevate isikute lisamiseks uutele üritustele.
+     */
     @Transactional
     public FyysilisedIsikud addExistingFyysilineIsikToYritus(Long isikId, Long yritusId) {
+        // Leia isik ja üritus
         FyysilisedIsikud existingIsik = fyysilisedIsikudRepository.findById(isikId)
                 .orElseThrow(() -> new RuntimeException("Physical person with ID " + isikId + " not found"));
 
         Yritused yritus = yritusedRepository.findById(yritusId)
                 .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
 
+        // Kontrolli, et isik ei ole juba sellel üritusel
         boolean alreadyAdded = yritusedIsikudRepository.findByYritus(yritus).stream()
                 .anyMatch(yi -> yi.getFyysilineIsikId() != null &&
                         yi.getFyysilineIsikId().getId().equals(existingIsik.getId()));
@@ -275,6 +335,7 @@ public class IsikudService {
             throw new IllegalArgumentException("This physical person is already added to this event");
         }
 
+        // Loo seos üritusega
         YritusedIsikud yritusedIsik = new YritusedIsikud();
         yritusedIsik.setYritus(yritus);
         yritusedIsik.setFyysilineIsikId(existingIsik);
@@ -285,12 +346,14 @@ public class IsikudService {
 
     @Transactional
     public JuriidilisedIsikud addExistingJuriidilineIsikToYritus(Long isikId, Long yritusId) {
+        // Leia isik ja üritus
         JuriidilisedIsikud existingIsik = juriidilisedIsikudRepository.findById(isikId)
                 .orElseThrow(() -> new RuntimeException("Legal entity with ID " + isikId + " not found"));
 
         Yritused yritus = yritusedRepository.findById(yritusId)
                 .orElseThrow(() -> new RuntimeException("Event with ID " + yritusId + " not found"));
 
+        // Kontrolli, et isik ei ole juba sellel üritusel
         boolean alreadyAdded = yritusedIsikudRepository.findByYritus(yritus).stream()
                 .anyMatch(yi -> yi.getJuriidilineIsikId() != null &&
                         yi.getJuriidilineIsikId().getId().equals(existingIsik.getId()));
@@ -299,6 +362,7 @@ public class IsikudService {
             throw new IllegalArgumentException("This legal entity is already added to this event");
         }
 
+        // Loo seos üritusega
         YritusedIsikud yritusedIsik = new YritusedIsikud();
         yritusedIsik.setYritus(yritus);
         yritusedIsik.setJuriidilineIsikId(existingIsik);

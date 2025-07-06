@@ -1,31 +1,39 @@
 package com.rik.prooviylesanne.service;
 
-import com.rik.prooviylesanne.dto.YritusedDto;
-import com.rik.prooviylesanne.model.Yritused;
-import com.rik.prooviylesanne.model.YritusedIsikud;
-import com.rik.prooviylesanne.repository.YritusedIsikudRepository;
-import com.rik.prooviylesanne.repository.YritusedRepository;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
+import com.rik.prooviylesanne.dto.YritusedDto;
+import com.rik.prooviylesanne.model.Yritused;
+import com.rik.prooviylesanne.model.YritusedIsikud;
+import com.rik.prooviylesanne.repository.YritusedIsikudRepository;
+import com.rik.prooviylesanne.repository.YritusedRepository;
+
+import jakarta.transaction.Transactional;
+
+/**
+ * Ürituste äriloogika teenus
+ * Vastutab ürituste loomise, muutmise, kuvamise ja kustutamise eest
+ */
 @Service
 public class YritusedService {
 
     private final YritusedRepository yritusedRepository;
     private final YritusedIsikudRepository yritusedIsikudRepository;
 
-    @Autowired
     public YritusedService(YritusedRepository yritusedRepository, YritusedIsikudRepository yritusedIsikudRepository) {
         this.yritusedRepository = yritusedRepository;
         this.yritusedIsikudRepository = yritusedIsikudRepository;
     }
 
+    /**
+     * Salvestab uue ürituse andmebaasi
+     * Kontrollib, et üritus ei ole minevikus toimuma planeeritud
+     */
     public Yritused saveYritus(Yritused yritus) {
         if (isEventInPast(yritus.getAeg())) {
             throw new IllegalArgumentException("Cannot add an event with a date in the past");
@@ -41,6 +49,10 @@ public class YritusedService {
         return yritusedRepository.findAll();
     }
 
+    /**
+     * Tagastab kõik üritused koos osalejate arvuga
+     * Loendab kokku nii füüsilised kui ka juriidilised isikud
+     */
     public List<YritusedDto> getAllYritusedAsDto() {
         List<Yritused> yritused = yritusedRepository.findAll();
         List<YritusedDto> yritusedDtos = new ArrayList<>();
@@ -48,6 +60,7 @@ public class YritusedService {
         for (Yritused yritus : yritused) {
             List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
 
+            // Loendame osalejate arvu
             int fyysilisedCount = 0;
             int juriidilisedOsavotjateCount = 0;
 
@@ -55,6 +68,7 @@ public class YritusedService {
                 if (isik.getFyysilineIsikId() != null) {
                     fyysilisedCount++;
                 } else if (isik.getJuriidilineIsikId() != null) {
+                    // Juriidilise isiku puhul võtame arvesse osalejate arvu
                     String osavotjateArvStr = isik.getJuriidilineIsikId().getOsavotjateArv();
                     try {
                         int osavotjateArv = Integer.parseInt(osavotjateArvStr);
@@ -73,8 +87,7 @@ public class YritusedService {
                     yritus.getAeg(),
                     yritus.getKoht(),
                     yritus.getLisainfo(),
-                    totalParticipants
-            );
+                    totalParticipants);
 
             yritusedDtos.add(dto);
         }
@@ -82,6 +95,9 @@ public class YritusedService {
         return yritusedDtos;
     }
 
+    /**
+     * Tagastab konkreetse ürituse andmed koos osalejate arvuga
+     */
     public Optional<YritusedDto> getYritusDtoById(Long id) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(id);
 
@@ -89,6 +105,7 @@ public class YritusedService {
             Yritused yritus = yritusOpt.get();
             List<YritusedIsikud> isikud = yritusedIsikudRepository.findByYritus(yritus);
 
+            // Loendame osalejate arvu samamoodi nagu getAllYritusedAsDto meetodis
             int fyysilisedCount = 0;
             int juriidilisedOsavotjateCount = 0;
 
@@ -114,8 +131,7 @@ public class YritusedService {
                     yritus.getAeg(),
                     yritus.getKoht(),
                     yritus.getLisainfo(),
-                    totalParticipants
-            );
+                    totalParticipants);
 
             return Optional.of(dto);
         }
@@ -123,6 +139,10 @@ public class YritusedService {
         return Optional.empty();
     }
 
+    /**
+     * Kustutab ürituse ja kõik sellega seotud andmed
+     * Ei luba kustutada üritust, mis on juba toimunud
+     */
     @Transactional
     public boolean deleteYritusWithRelatedRecords(Long id) {
         Optional<Yritused> yritusOpt = yritusedRepository.findById(id);
@@ -132,6 +152,7 @@ public class YritusedService {
             if (isEventInPast(yritus.getAeg())) {
                 throw new IllegalArgumentException("Cannot delete an event that has already passed");
             }
+            // Kustutame kõigepealt seotud andmed, seejärel ürituse enda
             yritusedIsikudRepository.deleteByYritus(yritus);
             yritusedRepository.delete(yritus);
             return true;
@@ -141,10 +162,8 @@ public class YritusedService {
     }
 
     /**
-     * Checks if the event time is in the past
-     *
-     * @param eventTime The time of the event
-     * @return true if the event time is before the current time
+     * Kontrollib, kas ürituse aeg on minevikus
+     * Kasutatakse ürituse lisamise ja kustutamise kontrolli jaoks
      */
     private boolean isEventInPast(OffsetDateTime eventTime) {
         return eventTime != null && eventTime.isBefore(OffsetDateTime.now());

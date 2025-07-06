@@ -1,10 +1,10 @@
 package com.rik.prooviylesanne.dto;
 
+import java.time.OffsetDateTime;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -17,7 +17,6 @@ public class YritusedDto {
     private String lisainfo;
     private Integer isikudCount;
 
-    // Constructor for conversion
     public YritusedDto(Long id, String nimi, OffsetDateTime aeg, String koht, String lisainfo, Integer isikudCount) {
         this.id = id;
         this.nimi = nimi;

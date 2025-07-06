@@ -1,18 +1,28 @@
 package com.rik.prooviylesanne.controllers;
 
-import com.rik.prooviylesanne.model.FyysilisedIsikud;
-import com.rik.prooviylesanne.model.JuriidilisedIsikud;
-import com.rik.prooviylesanne.model.MaksmiseViisid;
-import com.rik.prooviylesanne.service.IsikudService;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.rik.prooviylesanne.model.FyysilisedIsikud;
+import com.rik.prooviylesanne.model.JuriidilisedIsikud;
+import com.rik.prooviylesanne.service.IsikudService;
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * Kontroller isikute (füüsilised ja juriidilised isikud) haldamiseks.
+ * Võimaldab isikuid lisada, kustutada, muuta ja päringuid teha.
+ */
 @RestController
 @RequestMapping("/api/isikud")
 @CrossOrigin(origins = "*")
@@ -20,11 +30,13 @@ public class IsikudController {
 
     private final IsikudService isikudService;
 
-    @Autowired
     public IsikudController(IsikudService isikudService) {
         this.isikudService = isikudService;
     }
 
+    /**
+     * Päringu klass füüsilise isiku lisamiseks
+     */
     @Setter
     @Getter
     public static class FyysilineIsikRequest {
@@ -34,9 +46,12 @@ public class IsikudController {
         private String maksmiseViis;
         private String lisainfo;
         private Long yritusId;
-        private Long isikId;
+        private Long isikId; // Olemasoleva isiku ID, kui soovitakse lisada juba olemasolevat isikut
     }
 
+    /**
+     * Päringu klass juriidilise isiku lisamiseks
+     */
     @Setter
     @Getter
     public static class JuriidilineIsikRequest {
@@ -46,9 +61,12 @@ public class IsikudController {
         private String maksmiseViis;
         private String lisainfo;
         private Long yritusId;
-        private Long isikId;
+        private Long isikId; // Olemasoleva isiku ID, kui soovitakse lisada juba olemasolevat isikut
     }
 
+    /**
+     * Päringu klass füüsilise isiku muutmiseks
+     */
     @Setter
     @Getter
     public static class FyysilineIsikUpdateRequest {
@@ -60,6 +78,9 @@ public class IsikudController {
         private String lisainfo;
     }
 
+    /**
+     * Päringu klass juriidilise isiku muutmiseks
+     */
     @Setter
     @Getter
     public static class JuriidilineIsikUpdateRequest {
@@ -71,17 +92,22 @@ public class IsikudController {
         private String lisainfo;
     }
 
+    /**
+     * Lisab füüsilise isiku üritusele.
+     * Kui isikId on määratud, siis lisab olemasoleva isiku, muul juhul loob uue.
+     */
     @PostMapping("/add-fyysiline-isik")
     public ResponseEntity<?> addFyysilineIsik(@RequestBody FyysilineIsikRequest request) {
         try {
             FyysilisedIsikud savedIsik;
 
+            // Kontrollime, kas soovitakse lisada olemasolevat isikut
             if (request.getIsikId() != null) {
                 savedIsik = isikudService.addExistingFyysilineIsikToYritus(
                         request.getIsikId(),
-                        request.getYritusId()
-                );
+                        request.getYritusId());
             } else {
+                // Loome uue füüsilise isiku
                 FyysilisedIsikud isik = new FyysilisedIsikud();
                 isik.setEesnimi(request.getEesnimi());
                 isik.setPerekonnanimi(request.getPerekonnanimi());
@@ -91,8 +117,7 @@ public class IsikudController {
                 savedIsik = isikudService.addFyysilineIsikToYritus(
                         isik,
                         request.getYritusId(),
-                        request.getMaksmiseViis()
-                );
+                        request.getMaksmiseViis());
             }
 
             return ResponseEntity.ok(savedIsik);
@@ -105,17 +130,22 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Lisab juriidilise isiku üritusele.
+     * Kui isikId on määratud, siis lisab olemasoleva isiku, muul juhul loob uue.
+     */
     @PostMapping("/add-juriidiline-isik")
     public ResponseEntity<?> addJuriidilineIsik(@RequestBody JuriidilineIsikRequest request) {
         try {
             JuriidilisedIsikud savedIsik;
 
+            // Kontrollime, kas soovitakse lisada olemasolevat isikut
             if (request.getIsikId() != null) {
                 savedIsik = isikudService.addExistingJuriidilineIsikToYritus(
                         request.getIsikId(),
-                        request.getYritusId()
-                );
+                        request.getYritusId());
             } else {
+                // Loome uue juriidilise isiku
                 JuriidilisedIsikud isik = new JuriidilisedIsikud();
                 isik.setNimi(request.getNimi());
                 isik.setRegistrikood(request.getRegistrikood());
@@ -125,8 +155,7 @@ public class IsikudController {
                 savedIsik = isikudService.addJuriidilineIsikToYritus(
                         isik,
                         request.getYritusId(),
-                        request.getMaksmiseViis()
-                );
+                        request.getMaksmiseViis());
             }
 
             return ResponseEntity.ok(savedIsik);
@@ -139,6 +168,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Kustutab füüsilise isiku ID järgi
+     */
     @GetMapping("/delete-fyysiline-isik")
     public ResponseEntity<?> deleteFyysilineIsik(@RequestParam Long id) {
         try {
@@ -155,6 +187,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Kustutab juriidilise isiku ID järgi
+     */
     @GetMapping("/delete-juriidiline-isik")
     public ResponseEntity<?> deleteJuriidilineIsik(@RequestParam Long id) {
         try {
@@ -171,6 +206,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Tagastab kõik üritusega seotud isikud (nii füüsilised kui juriidilised)
+     */
     @GetMapping("/get-isikud")
     public ResponseEntity<?> getIsikudByYritusId(@RequestParam Long yritusId) {
         try {
@@ -182,6 +220,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Uuendab füüsilise isiku andmeid
+     */
     @PostMapping("/update-fyysiline-isik")
     public ResponseEntity<?> updateFyysilineIsik(@RequestBody FyysilineIsikUpdateRequest request) {
         try {
@@ -189,6 +230,7 @@ public class IsikudController {
                 return ResponseEntity.badRequest().body("ID is required for updating a physical person");
             }
 
+            // Loome uuendatava isiku objekti
             FyysilisedIsikud isikToUpdate = new FyysilisedIsikud();
             isikToUpdate.setEesnimi(request.getEesnimi());
             isikToUpdate.setPerekonnanimi(request.getPerekonnanimi());
@@ -198,8 +240,7 @@ public class IsikudController {
             FyysilisedIsikud updatedIsik = isikudService.updateFyysilineIsik(
                     request.getId(),
                     isikToUpdate,
-                    request.getMaksmiseViis()
-            );
+                    request.getMaksmiseViis());
 
             return ResponseEntity.ok(updatedIsik);
         } catch (Exception e) {
@@ -208,6 +249,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Uuendab juriidilise isiku andmeid
+     */
     @PostMapping("/update-juriidiline-isik")
     public ResponseEntity<?> updateJuriidilineIsik(@RequestBody JuriidilineIsikUpdateRequest request) {
         try {
@@ -215,6 +259,7 @@ public class IsikudController {
                 return ResponseEntity.badRequest().body("ID is required for updating a legal entity");
             }
 
+            // Loome uuendatava isiku objekti
             JuriidilisedIsikud isikToUpdate = new JuriidilisedIsikud();
             isikToUpdate.setNimi(request.getNimi());
             isikToUpdate.setRegistrikood(request.getRegistrikood());
@@ -224,8 +269,7 @@ public class IsikudController {
             JuriidilisedIsikud updatedIsik = isikudService.updateJuriidilineIsik(
                     request.getId(),
                     isikToUpdate,
-                    request.getMaksmiseViis()
-            );
+                    request.getMaksmiseViis());
 
             return ResponseEntity.ok(updatedIsik);
         } catch (Exception e) {
@@ -234,6 +278,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Tagastab füüsilise isiku andmed ID järgi
+     */
     @GetMapping("/get-fyysiline-isik")
     public ResponseEntity<?> getFyysilineIsikById(@RequestParam Long id) {
         try {
@@ -245,6 +292,9 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Tagastab juriidilise isiku andmed ID järgi
+     */
     @GetMapping("/get-juriidiline-isik")
     public ResponseEntity<?> getJuriidilineIsikById(@RequestParam Long id) {
         try {
@@ -256,6 +306,10 @@ public class IsikudController {
         }
     }
 
+    /**
+     * Tagastab kõik saadaolevad isikud, keda saab üritusele lisada
+     * (isikud, kes veel pole selle üritusega seotud)
+     */
     @GetMapping("/get-saadavad-isikud")
     public ResponseEntity<?> getSaadavadIsikudByYritusId(@RequestParam Long yritusId) {
         try {
