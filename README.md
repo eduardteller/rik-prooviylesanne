@@ -1,4 +1,4 @@
-# RIK Prooviülesanne
+# Ürituste ja osavõtjate haldamissüsteem
 
 **Autor:** Eduard Teller
 
